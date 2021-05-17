@@ -1,11 +1,7 @@
-import htm from 'https://unpkg.com/htm?module';
-// noinspection ES6PreferShortImport
-import { useComponent } from '../../../zems/core/ZemsReact'; /*$ZEMS_RESOURCE$*/
+import { useComponent } from '../../../../modules/zems/core/ZemsReact'; /*$ZEMS_RESOURCE$*/
 
 // noinspection JSUnusedGlobalSymbols
 export default function TextAndImage(props) {
-
-  const html = htm.bind(React.createElement);
   const { text, imageSrc } = props;
 
   const TextComponent = useComponent({
@@ -23,13 +19,13 @@ export default function TextAndImage(props) {
   }
 
   if (isReadyToRender()) {
-    return html`
+    return jsxLight`
       <div>
         ${TextComponent}
         ${ImageComponent}
       </div>`;
   } else {
-    return html`
+    return jsxLight`
       <div>Loading ...</div>`;
   }
 }

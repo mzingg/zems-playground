@@ -11,6 +11,8 @@ sourceSets {
       srcDir("src/main/ops")
       resources {
         srcDir("src/main/components")
+        srcDir("src/main/modules")
+        srcDir("src/main/renders")
       }
     }
   }
