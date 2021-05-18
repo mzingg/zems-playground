@@ -1,7 +1,7 @@
 // noinspection ES6PreferShortImport
 
-import 'https://unpkg.com/react@17/umd/react.development.js';
-import 'https://unpkg.com/react-dom@17/umd/react-dom.development.js';
+import 'https://unpkg.com/react@17/umd/react.production.min.js';
+import 'https://unpkg.com/react-dom@17/umd/react-dom.production.min.js';
 import htm from 'https://unpkg.com/htm?module';
 
 import { uuidv4 } from '../../../../modules/zems/core/Lib'; /*$ZEMS_RESOURCE$*/
@@ -53,7 +53,7 @@ export const cmp = async ({ resourceType, renderId, modelLoader }) => {
 const load = async ({ resourceType, modelLoader }) => {
   const { default: Component } = await import(`../../../../components/${resourceType}`); /*$ZEMS_RESOURCE$*/
   const model = await modelLoader();
-  if (model.key) {
+  if (model?.key) {
     throw Error('Model must not have \'key\' property as this is used for uniquely identifying React components.')
   }
 
