@@ -32,7 +32,7 @@ export const useComponents = (componentArray) => {
   const [components, setComponents] = useState();
 
   useEffect(() => {
-    if (!components) {
+    if (componentArray && !components) {
       loadAll(componentArray)
           .then(c => setComponents(c));
     }
@@ -45,14 +45,14 @@ export const useKeyGenerator = () => {
   return () => uuidv4();
 }
 
-export const cmp = async ({ resourceType, renderId, modelLoader }) => {
+export const cmp = async ({ resourceType, renderId, modelLoader= null }) => {
   const ReactElement = await load({ resourceType, modelLoader });
   render(ReactElement, document.getElementById(renderId));
 }
 
-const load = async ({ resourceType, modelLoader }) => {
+const load = async ({ resourceType, modelLoader = null }) => {
   const { default: Component } = await import(`../../../../components/${resourceType}`); /*$ZEMS_RESOURCE$*/
-  const model = await modelLoader();
+  const model = modelLoader ? (await modelLoader)() : {};
   if (model?.key) {
     throw Error('Model must not have \'key\' property as this is used for uniquely identifying React components.')
   }

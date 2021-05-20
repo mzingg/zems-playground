@@ -12,3 +12,9 @@ const ConfigContext = createContext(Configuration)
 export const useConfig = () => {
   return useContext(ConfigContext);
 }
+
+export const SocketServerUrl = {
+  localdev: 'http://localhost:56751/zems-contentbus',
+  dev: 'http://localhost:55878/zems-contentbus',
+  int: 'http://localhost:55878/zems-contentbus',
+};
