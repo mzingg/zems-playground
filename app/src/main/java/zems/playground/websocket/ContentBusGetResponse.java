@@ -1,6 +1,6 @@
 package zems.playground.websocket;
 
-public class GetModelResponse {
+public class ContentBusGetResponse {
 
   private String clientId;
   private String path;
@@ -10,7 +10,7 @@ public class GetModelResponse {
     return clientId;
   }
 
-  public GetModelResponse setClientId(String clientId) {
+  public ContentBusGetResponse setClientId(String clientId) {
     this.clientId = clientId;
     return this;
   }
@@ -19,7 +19,7 @@ public class GetModelResponse {
     return path;
   }
 
-  public GetModelResponse setPath(String path) {
+  public ContentBusGetResponse setPath(String path) {
     this.path = path;
     return this;
   }
@@ -28,7 +28,7 @@ public class GetModelResponse {
     return properties;
   }
 
-  public GetModelResponse setProperties(Object properties) {
+  public ContentBusGetResponse setProperties(Object properties) {
     this.properties = properties;
     return this;
   }

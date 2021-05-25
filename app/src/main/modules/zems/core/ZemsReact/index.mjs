@@ -2,7 +2,6 @@
 
 import { uuidv4 } from '../../../../modules/zems/core/Lib/index.mjs'; /*$ZEMS_RESOURCE$*/
 import { isServerSide, React, ReactDOM, ReactDOMServer } from '../../../../modules/zems/core/React/index.mjs'; /*$ZEMS_SSR_RESOURCE$*/
-// import { ContentBusLoader } from "../../../../modules/zems/core/ContentBus.SSR/index.mjs"; /*$ZEMS_SSR_RESOURCE$*/
 import { ContentBusLoader } from '../../../../modules/zems/core/ContentBus/index.mjs'; /*$ZEMS_RESOURCE$*/
 
 const { useState, useEffect, createElement } = React;
