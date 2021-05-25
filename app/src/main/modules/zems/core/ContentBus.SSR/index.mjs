@@ -1,3 +1,5 @@
+// noinspection JSUnusedGlobalSymbols
+
 const PageModel = {
   pageTitle: 'Page Title From Contentbus',
   contentParsys: {
@@ -84,13 +86,10 @@ const PageModel = {
   }
 }
 
-export const ContentBusLoader = async ({ path }) => {
+export const ContentBusLoader = ({ path }) => {
   if (path === '/content/playground/de/de') {
-    return async () => PageModel;
+    return () => PageModel;
   } else if ('/content/playground/de/de>contentParsys') {
-    return async () => PageModel.contentParsys;
+    return () => PageModel.contentParsys;
   }
 }
-
-
-

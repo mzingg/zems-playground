@@ -10,7 +10,7 @@ const withContentBusClient = () => {
 
     let ContentBusClient = window.ContentBusClient;
     if (!ContentBusClient) {
-      // noinspection JSUnusedGlobalSymbols,JSUnusedLocalSymbols
+      // noinspection JSUnresolvedFunction,JSUnusedGlobalSymbols,JSUnusedLocalSymbols
       ContentBusClient = new window.StompJs.Client({
         webSocketFactory: () => new window.SockJS(window.SocketServerUrl),
         debug: (message) => {
@@ -62,7 +62,7 @@ const withContentBusClient = () => {
               clearTimeout(timerId);
 
               delete data.clientId;
-              resolve(async () => data.properties);
+              resolve(data.properties);
             }
           });
 
@@ -86,93 +86,5 @@ const withContentBusClient = () => {
 }
 
 export const ContentBusLoader = async ({ path }) => {
-  return await (await withContentBusClient()).get({ path });
+  return (await withContentBusClient()).get({ path });
 }
-
-
-// const PageModel = {
-//   pageTitle: 'Page Title From Contentbus',
-//   contentParsys: {
-//     components: [
-//       {
-//         resourceType: 'zems/playground/TextImage',
-//         modelLoader: () => ({
-//           text: 'A lorem ipsum text 1',
-//           imageSrc: 'data:image/gif;base64,R0lGODlhEAAQAMQAAORHHOVSKudfOulrSOp3WOyDZu6QdvCchPGolfO0o/XBs/fNwfjZ0frl3/zy7////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAkAABAALAAAAAAQABAAAAVVICSOZGlCQAosJ6mu7fiyZeKqNKToQGDsM8hBADgUXoGAiqhSvp5QAnQKGIgUhwFUYLCVDFCrKUE1lBavAViFIDlTImbKC5Gm2hB0SlBCBMQiB0UjIQA7'
-//         })
-//       },
-//       {
-//         resourceType: 'zems/playground/TextImage',
-//         modelLoader: () => ({
-//           text: 'A lorem ipsum text 2',
-//           imageSrc: ''
-//         })
-//       },
-//       {
-//         resourceType: 'zems/playground/TextImage',
-//         modelLoader: () => ({
-//           text: 'A lorem ipsum text 3',
-//           imageSrc: ''
-//         })
-//       },
-//       {
-//         resourceType: 'zems/playground/TextImage',
-//         modelLoader: () => ({
-//           text: 'A lorem ipsum text 4',
-//           imageSrc: ''
-//         })
-//       },
-//       {
-//         resourceType: 'zems/playground/TextImage',
-//         modelLoader: () => ({
-//           text: 'A lorem ipsum text 5',
-//           imageSrc: ''
-//         })
-//       },
-//       {
-//         resourceType: 'zems/playground/Text',
-//         modelLoader: () => ({
-//           text: 'A lorem ipsum text 6',
-//         })
-//       },
-//       {
-//         resourceType: 'zems/core/Container',
-//         modelLoader: () => ({
-//           components: [
-//             {
-//               resourceType: 'zems/playground/Text',
-//               modelLoader: () => ({
-//                 text: 'Container Component 1',
-//               })
-//             },
-//             {
-//               resourceType: 'zems/playground/Text',
-//               modelLoader: () => ({
-//                 text: 'Container Component 2',
-//               })
-//             },
-//           ]
-//         })
-//       },
-//       {
-//         resourceType: 'zems/playground/Text',
-//         modelLoader: () => ({
-//           text: 'A lorem ipsum text 8',
-//         })
-//       },
-//       {
-//         resourceType: 'zems/playground/Text',
-//         modelLoader: () => ({
-//           text: 'A lorem ipsum text 9',
-//         })
-//       },
-//       {
-//         resourceType: 'zems/playground/Image',
-//         modelLoader: () => ({
-//           imageSrc: 'data:image/gif;base64,R0lGODlhEAAQAMQAAORHHOVSKudfOulrSOp3WOyDZu6QdvCchPGolfO0o/XBs/fNwfjZ0frl3/zy7////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAkAABAALAAAAAAQABAAAAVVICSOZGlCQAosJ6mu7fiyZeKqNKToQGDsM8hBADgUXoGAiqhSvp5QAnQKGIgUhwFUYLCVDFCrKUE1lBavAViFIDlTImbKC5Gm2hB0SlBCBMQiB0UjIQA7'
-//         })
-//       },
-//     ]
-//   }
-// }
-

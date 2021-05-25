@@ -1,13 +1,10 @@
-
-import { React, jsxLight } from '../../../../modules/zems/core/React/index.mjs'; /*$ZEMS_SSR_RESOURCE$*/
-import { useKeyGenerator, useComponent } from '../../../../modules/zems/core/ZemsReact/index.mjs'; /*$ZEMS_RESOURCE$*/
+import { jsxLight, React } from '../../../../modules/zems/core/React/index.mjs'; /*$ZEMS_SSR_RESOURCE$*/
+import { useComponent, useKeyGenerator } from '../../../../modules/zems/core/ZemsReact/index.mjs'; /*$ZEMS_RESOURCE$*/
 import { RenderMode } from '../../../../modules/zems/core/Defs/index.mjs'; /*$ZEMS_RESOURCE$*/
 import { useConfig } from '../../../../modules/zems/playground/Config/index.mjs'; /*$ZEMS_RESOURCE$*/
 
-// noinspection JSUnresolvedVariable
 const { useState } = React;
 
-// noinspection JSUnusedGlobalSymbols
 export default function Editor(props) {
   const [editMode, setEditMode] = useState(false);
   const createKey = useKeyGenerator();
@@ -15,7 +12,7 @@ export default function Editor(props) {
 
   const EditDialogComponent = useComponent({
     resourceType: 'zems/core/EditDialog',
-    modelLoader: async () => ({ dialogTitle: 'Edit Dialog' })
+    modelLoader: () => ({ dialogTitle: 'Edit Dialog' })
   });
 
   const toggleEditMode = (event) => {

@@ -1,5 +1,4 @@
 import { jsxLight } from '../../../../modules/zems/core/React/index.mjs'; /*$ZEMS_SSR_RESOURCE$*/
-
 import { useConfig } from '../../../../modules/zems/playground/Config/index.mjs'; /*$ZEMS_SSR_RESOURCE$*/
 
 export default function PageTitle(props) {

@@ -1,7 +1,4 @@
-// noinspection JSUnusedGlobalSymbols
-
 import { jsxLight } from '../../../../modules/zems/core/React/index.mjs'; /*$ZEMS_RESOURCE$*/
-
 import { useComponent } from '../../../../modules/zems/core/ZemsReact/index.mjs'; /*$ZEMS_RESOURCE$*/
 
 export default function TextAndImage(props) {
@@ -9,12 +6,12 @@ export default function TextAndImage(props) {
 
   const TextComponent = useComponent({
     resourceType: 'zems/playground/Text',
-    modelLoader: async () => ({ text })
+    modelLoader: () => ({ text })
   })
 
   const ImageComponent = useComponent({
     resourceType: 'zems/playground/Image',
-    modelLoader: async () => ({ imageSrc })
+    modelLoader: () => ({ imageSrc })
   })
 
   if (ImageComponent && TextComponent) {

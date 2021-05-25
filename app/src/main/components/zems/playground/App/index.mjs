@@ -1,7 +1,6 @@
 // noinspection JSUnusedGlobalSymbols
 
 import { jsxLight, React } from '../../../../modules/zems/core/React/index.mjs'; /*$ZEMS_SSR_RESOURCE$*/
-
 import { useComponent } from '../../../../modules/zems/core/ZemsReact/index.mjs'; /*$ZEMS_RESOURCE$*/
 
 export default function App(props) {

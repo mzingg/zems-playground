@@ -1,4 +1,4 @@
-// noinspection ES6PreferShortImport,JSUnresolvedVariable
+// noinspection ES6PreferShortImport
 
 import { React } from '../../../../modules/zems/core/React/index.mjs'; /*$ZEMS_SSR_RESOURCE$*/
 import { ZemsConfiguration } from '../../../../modules/zems/core/Defs/index.mjs'; /*$ZEMS_RESOURCE$*/
