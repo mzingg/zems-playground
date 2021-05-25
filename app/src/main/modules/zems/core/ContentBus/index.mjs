@@ -1,51 +1,45 @@
 // noinspection ES6PreferShortImport
 
-import 'https://cdn.jsdelivr.net/npm/sockjs-client@1.5.1/dist/sockjs.min.js';
-import 'https://cdn.jsdelivr.net/npm/@stomp/stompjs@6.1.0/bundles/stomp.umd.min.js';
-import { uuidv4 } from "../Lib";
+import { uuidv4 } from '../../../../modules/zems/core/Lib/index.mjs'; /*$ZEMS_RESOURCE$*/
 
 const withContentBusClient = () => {
   return new Promise((resolve, reject) => {
     if (!window.SocketServerUrl) {
-      throw Error('Please define global variable window.SocketServerUrl that points to the websocket.');
+      throw Error('Please define variable window.SocketServerUrl that points to the websocket.');
     }
 
     let ContentBusClient = window.ContentBusClient;
     if (!ContentBusClient) {
-      // noinspection JSUnusedGlobalSymbols
-      ContentBusClient = new StompJs.Client({
-        webSocketFactory: () => new SockJS(window.SocketServerUrl),
+      // noinspection JSUnusedGlobalSymbols,JSUnusedLocalSymbols
+      ContentBusClient = new window.StompJs.Client({
+        webSocketFactory: () => new window.SockJS(window.SocketServerUrl),
         debug: (message) => {
           // uncomment to see debug messages about the STOMP protocol in the browser console
-          console.debug(message);
+          // console.debug(message);
         },
         connectionTimeout: 100,
-        reconnectDelay: 5000,
-        heartbeatIncoming: 4000,
-        heartbeatOutgoing: 4000,
+        reconnectDelay: 1000,
+        heartbeatIncoming: 0,
+        heartbeatOutgoing: 0,
       });
 
       ContentBusClient.GetSubscriptions = {};
 
       ContentBusClient.onConnect = () => {
         window.ContentBusClient = ContentBusClient;
-        ContentBusClient.subscribe('/topic/contentbus', (message) => {
-          console.info('Global message handler');
-          console.info(message.body);
-        });
         resolve(ContentBusClient);
       }
 
       ContentBusClient.cleanupSubscription = (clientId) => {
         if (ContentBusClient.GetSubscriptions[clientId]) {
           ContentBusClient.GetSubscriptions[clientId].unsubscribe();
-          ContentBusClient.GetSubscriptions[clientId] = undefined;
+          delete ContentBusClient.GetSubscriptions.clientId;
         }
       }
 
       ContentBusClient.get = ({ path }) => {
         return new Promise((resolve, reject) => {
-          const ReadTimeout = 1100;
+          const ReadTimeout = 5000;
 
           // create a unique id to identify this request in the content bus
           const clientId = uuidv4();
@@ -68,7 +62,7 @@ const withContentBusClient = () => {
               clearTimeout(timerId);
 
               delete data.clientId;
-              resolve(data.properties);
+              resolve(async () => data.properties);
             }
           });
 
@@ -80,7 +74,7 @@ const withContentBusClient = () => {
       }
 
       ContentBusClient.onStompError = (frame) => {
-        window.ContentBusClient = undefined;
+        delete window.ContentBusClient;
         reject(frame);
       }
 
@@ -92,9 +86,7 @@ const withContentBusClient = () => {
 }
 
 export const ContentBusLoader = async ({ path }) => {
-  let result = await (await withContentBusClient()).get({ path });
-  console.info(result);
-  return () => result;
+  return await (await withContentBusClient()).get({ path });
 }
 
 

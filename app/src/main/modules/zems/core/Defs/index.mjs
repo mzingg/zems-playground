@@ -14,6 +14,8 @@ export const RenderMode = Object.freeze({
   }
 });
 
+const renderModeValue = typeof window === 'object' && window.sessionStorage ? window.sessionStorage.getItem(ZemsRenderModeStorageId) : ZemsRenderModePublishString;
+
 export const ZemsConfiguration = {
-  renderMode: RenderMode.fromValue(window.sessionStorage.getItem(ZemsRenderModeStorageId) || ZemsRenderModeAuthorString),
+  renderMode: RenderMode.fromValue(renderModeValue),
 };

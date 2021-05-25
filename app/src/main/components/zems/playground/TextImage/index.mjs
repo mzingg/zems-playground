@@ -1,6 +1,9 @@
-import { useComponent } from '../../../../modules/zems/core/ZemsReact'; /*$ZEMS_RESOURCE$*/
-
 // noinspection JSUnusedGlobalSymbols
+
+import { jsxLight } from '../../../../modules/zems/core/React/index.mjs'; /*$ZEMS_RESOURCE$*/
+
+import { useComponent } from '../../../../modules/zems/core/ZemsReact/index.mjs'; /*$ZEMS_RESOURCE$*/
+
 export default function TextAndImage(props) {
   const { text, imageSrc } = props;
 
@@ -14,11 +17,7 @@ export default function TextAndImage(props) {
     modelLoader: async () => ({ imageSrc })
   })
 
-  function isReadyToRender() {
-    return ImageComponent && TextComponent;
-  }
-
-  if (isReadyToRender()) {
+  if (ImageComponent && TextComponent) {
     return jsxLight`
       <div>
         ${TextComponent}

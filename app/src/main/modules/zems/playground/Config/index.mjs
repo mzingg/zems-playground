@@ -1,9 +1,9 @@
-// noinspection ES6PreferShortImport
+// noinspection ES6PreferShortImport,JSUnresolvedVariable
 
-import { ZemsConfiguration } from '../../../../modules/zems/core/Defs'; /*$ZEMS_RESOURCE$*/
+import { React } from '../../../../modules/zems/core/React/index.mjs'; /*$ZEMS_SSR_RESOURCE$*/
+import { ZemsConfiguration } from '../../../../modules/zems/core/Defs/index.mjs'; /*$ZEMS_RESOURCE$*/
 
-// noinspection JSUnresolvedVariable
-const { createContext, useContext } = window.React;
+const { createContext, useContext } = React;
 
 // this is an example on how to extend the base configuration and make it available to your components
 const Configuration = { ...ZemsConfiguration, pageTitlePrefix: 'Playground' };
@@ -14,7 +14,7 @@ export const useConfig = () => {
 }
 
 export const SocketServerUrl = {
-  localdev: 'http://localhost:56751/zems-contentbus',
+  localdev: 'http://localhost:61734/zems-contentbus',
   dev: 'http://localhost:55878/zems-contentbus',
   int: 'http://localhost:55878/zems-contentbus',
 };
