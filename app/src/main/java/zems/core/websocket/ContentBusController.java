@@ -9,7 +9,8 @@ import zems.core.contentbus.InMemoryContentBus;
 @Controller
 public class ContentBusController {
 
-  private final ContentBus contentBus = new InMemoryContentBus();
+  private final ContentBus contentBus = new InMemoryContentBus()
+      .withInitialState("zems/core/contentbus/initialState.json");
 
   @MessageMapping("/contentbus/get")
   @SendTo("/topic/contentbus")

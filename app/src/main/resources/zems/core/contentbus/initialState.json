@@ -1,0 +1,69 @@
+{
+  "/content/playground/de/de": {
+    "resourceType": "zems/playground/App",
+    "pageTitle": "Page Title From Contentbus",
+    "configuration": {
+      "value1": "Blubb",
+      "value2": "Blubber"
+    },
+    "contentParsys": {
+      "resourceType": "zems/core/Container",
+      "components": [
+        {
+          "resourceType": "zems/playground/TextImage",
+          "text": "A lorem ipsum text 1",
+          "imageSrc": ""
+        },
+        {
+          "resourceType": "zems/playground/TextImage",
+          "text": "A lorem ipsum text 2",
+          "imageSrc": ""
+        },
+        {
+          "resourceType": "zems/playground/TextImage",
+          "text": "A lorem ipsum text 3",
+          "imageSrc": ""
+        },
+        {
+          "resourceType": "zems/playground/TextImage",
+          "text": "A lorem ipsum text 4",
+          "imageSrc": ""
+        },
+        {
+          "resourceType": "zems/playground/TextImage",
+          "text": "A lorem ipsum text 5",
+          "imageSrc": ""
+        },
+        {
+          "resourceType": "zems/playground/Text",
+          "text": "A lorem ipsum text 6"
+        },
+        {
+          "resourceType": "zems/core/Container",
+          "components": [
+            {
+              "resourceType": "zems/playground/Text",
+              "text": "Container Component 1"
+            },
+            {
+              "resourceType": "zems/playground/Text",
+              "text": "Container Component 2"
+            }
+          ]
+        },
+        {
+          "resourceType": "zems/playground/Text",
+          "text": "A lorem ipsum text 8"
+        },
+        {
+          "resourceType": "zems/playground/Text",
+          "text": "A lorem ipsum text 9"
+        },
+        {
+          "resourceType": "zems/playground/Image",
+          "imageSrc": "data:image/gif;base64,R0lGODlhEAAQAMQAAORHHOVSKudfOulrSOp3WOyDZu6QdvCchPGolfO0o/XBs/fNwfjZ0frl3/zy7////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAkAABAALAAAAAAQABAAAAVVICSOZGlCQAosJ6mu7fiyZeKqNKToQGDsM8hBADgUXoGAiqhSvp5QAnQKGIgUhwFUYLCVDFCrKUE1lBavAViFIDlTImbKC5Gm2hB0SlBCBMQiB0UjIQA7"
+        }
+      ]
+    }
+  }
+}
