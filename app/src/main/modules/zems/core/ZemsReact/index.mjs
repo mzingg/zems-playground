@@ -11,13 +11,12 @@ const { renderToString } = ReactDOMServer;
 const SupportedComponents = {};
 
 export const useComponent = ({ resourceType, path = null, modelLoader = null }) => {
-  const usedModelLoader = path ? ContentBusLoader({ path }) : modelLoader;
   const [component, setComponent] = useState(
-      getReactComponentWithModel({ resourceType, modelLoader: usedModelLoader })
+      getReactComponentWithModel({ resourceType, path, modelLoader })
   );
 
   useEffect(() => {
-    loadReactComponentWithModel({ resourceType, modelLoader: usedModelLoader })
+    loadReactComponentWithModel({ resourceType, path, modelLoader })
         .then(c => setComponent(c));
   }, []);
 
@@ -25,7 +24,9 @@ export const useComponent = ({ resourceType, path = null, modelLoader = null }) 
 }
 
 export const useComponents = (componentDefinitionArray) => {
-  const [components, setComponents] = useState(getReactComponentsWithModel(componentDefinitionArray));
+  const [components, setComponents] = useState(
+      getReactComponentsWithModel(componentDefinitionArray)
+  );
 
   useEffect(() => {
     loadReactComponentsWithModel(componentDefinitionArray)
@@ -67,7 +68,7 @@ const loadSupportedReactComponent = async ({ resourceType }) => {
   return Component;
 }
 
-const getReactComponentWithModel = ({ resourceType, modelLoader = null }) => {
+const getReactComponentWithModel = ({ resourceType, path = null, modelLoader = null }) => {
   if (!isServerSide) {
     return null;
   }
@@ -75,11 +76,11 @@ const getReactComponentWithModel = ({ resourceType, modelLoader = null }) => {
   if (!Component) {
     throw Error(`Resource type ${resourceType} not supported for synchronous loading. Please call loadSupportedReactComponent first.`)
   }
-  const modelLoaderToUse = modelLoader ? modelLoader : () => {
-  };
+  const modelLoaderToUse = getLoader(path, modelLoader);
   if (typeof modelLoaderToUse !== 'function') {
     throw Error('Only functions are supported as modelLoader')
   }
+
   const model = modelLoaderToUse();
   if (model?.key) {
     throw Error('Model must not have \'key\' property as this is used for uniquely identifying React components.')
@@ -88,11 +89,10 @@ const getReactComponentWithModel = ({ resourceType, modelLoader = null }) => {
   return createElement(Component, { ...model, key: uuidv4() });
 }
 
-const loadReactComponentWithModel = async ({ resourceType, modelLoader = null }) => {
+const loadReactComponentWithModel = async ({ resourceType, path = null, modelLoader = null }) => {
   const { default: Component } = await import(`../../../../components/${resourceType}/index.mjs`); /*$ZEMS_RESOURCE$*/
 
-  const modelLoaderToUse = modelLoader ? modelLoader : () => {
-  };
+  const modelLoaderToUse = getLoader(path, modelLoader);
   const model = typeof modelLoaderToUse === 'function' ? modelLoaderToUse() : (modelLoaderToUse instanceof Promise ? await modelLoaderToUse : {});
   if (model?.key) {
     throw Error('Model must not have \'key\' property as this is used for uniquely identifying React components.')
@@ -122,3 +122,17 @@ const loadReactComponentsWithModel = async (componentsArray) => {
   }
   return result;
 }
+
+const getLoader = (path, modelLoader) => {
+  let saveModelLoader;
+  if (path !== null && modelLoader === null) {
+    saveModelLoader = ContentBusLoader({ path });
+  } else if (path == null && modelLoader === null) {
+    saveModelLoader = () => {
+    };
+  } else {
+    saveModelLoader = modelLoader;
+  }
+
+  return saveModelLoader;
+};

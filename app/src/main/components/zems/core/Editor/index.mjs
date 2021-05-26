@@ -1,14 +1,14 @@
 import { jsxLight, React } from '../../../../modules/zems/core/React/index.mjs'; /*$ZEMS_SSR_RESOURCE$*/
 import { useComponent, useKeyGenerator } from '../../../../modules/zems/core/ZemsReact/index.mjs'; /*$ZEMS_RESOURCE$*/
 import { RenderMode } from '../../../../modules/zems/core/Defs/index.mjs'; /*$ZEMS_RESOURCE$*/
-import { useConfig } from '../../../../modules/zems/playground/Config/index.mjs'; /*$ZEMS_RESOURCE$*/
+import { Configuration } from '../../../../modules/zems/playground/Config/index.mjs'; /*$ZEMS_RESOURCE$*/
 
 const { useState } = React;
 
 export default function Editor(props) {
   const [editMode, setEditMode] = useState(false);
   const createKey = useKeyGenerator();
-  const { renderMode } = useConfig();
+  const { renderMode } = Configuration;
 
   const EditDialogComponent = useComponent({
     resourceType: 'zems/core/EditDialog',

@@ -31,15 +31,21 @@
 <body>
 <div id="app-root"></div>
 
-<script type="module">
-  window.SocketServerUrl = 'http://localhost:51883/zems-contentbus';
-
+<script type="module" data-zems-instruction="ssr(app-root, zems/playground/App)">
   import { cmp } from '../../../../modules/zems/core/ZemsReact/index.mjs'; /*$ZEMS_RESOURCE$*/
+  import { Configuration } from '../../../../modules/zems/playground/Config/index.mjs'; /*$ZEMS_SSR_RESOURCE$*/
+
+  const { currentContentPath, contentBusUrl } = Configuration;
+
+  window.SocketServerUrl = contentBusUrl;
+  if (!window.sessionStorage.getItem('ZemsRenderMode')) {
+    window.sessionStorage.setItem('ZemsRenderMode', 'author');
+  }
 
   cmp({
     resourceType: 'zems/playground/App',
     renderId: 'app-root',
-    modelLoader: () => ({ pagePath: '/content/playground/de/de' })
+    modelLoader: () => ({ pagePath: currentContentPath })
   })
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"

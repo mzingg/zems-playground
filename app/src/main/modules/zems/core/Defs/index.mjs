@@ -7,10 +7,10 @@ export const RenderMode = Object.freeze({
   PUBLISH: Symbol(ZemsRenderModePublishString),
   fromValue(value) {
     const { AUTHOR, PUBLISH } = this;
-    if (value === ZemsRenderModePublishString) {
-      return PUBLISH;
+    if (value === ZemsRenderModeAuthorString) {
+      return AUTHOR;
     }
-    return AUTHOR;
+    return PUBLISH;
   }
 });
 
@@ -18,4 +18,5 @@ const renderModeValue = typeof window === 'object' && window.sessionStorage ? wi
 
 export const ZemsConfiguration = {
   renderMode: RenderMode.fromValue(renderModeValue),
+  currentContentPath: '/content/playground/de/de'
 };
