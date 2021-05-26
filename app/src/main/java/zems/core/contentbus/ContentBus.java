@@ -1,4 +1,4 @@
-package zems.playground.contentbus;
+package zems.core.contentbus;
 
 public interface ContentBus {
 

@@ -1,10 +1,10 @@
-package zems.playground.ssr;
+package zems.core.ssr;
 
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
-import zems.playground.contentbus.ContentBus;
+import zems.core.contentbus.ContentBus;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -24,13 +24,19 @@ public class GraalVMServersideRenderer implements ServerSideRenderer {
   private static final String METHOD_CATCH = "catch";
   private static final String PREFIX_RENDER_PATH = "app/src/main/renders";
 
-  @Override
-  public String render(String renderType, String entryResourceType, String contentPath, ContentBus contentBus) throws IOException {
-    // TODO: load ssr variant of Render and put in rendered JS
-    return renderJavascript(renderType, entryResourceType, contentPath, contentBus);
+  private final ContentBus contentBus;
+
+  public GraalVMServersideRenderer(ContentBus contentBus) {
+    this.contentBus = contentBus;
   }
 
-  private String renderJavascript(String renderType, String entryResourceType, String contentPath, ContentBus contentBus) throws IOException {
+  @Override
+  public String render(String renderType, String entryResourceType, String contentPath) throws IOException {
+    // TODO: load ssr variant of Render and put in rendered JS
+    return renderJavascript(renderType, entryResourceType, contentPath);
+  }
+
+  private String renderJavascript(String renderType, String entryResourceType, String contentPath) throws IOException {
     try (Context context = Context.newBuilder(LANGUAGE_JS)
         .allowExperimentalOptions(true)
         .allowHostAccess(HostAccess.ALL)

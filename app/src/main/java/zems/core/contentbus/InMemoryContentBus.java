@@ -1,4 +1,4 @@
-package zems.playground.contentbus;
+package zems.core.contentbus;
 
 import java.util.List;
 import java.util.Map;

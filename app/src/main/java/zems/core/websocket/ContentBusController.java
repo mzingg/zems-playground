@@ -1,10 +1,10 @@
-package zems.playground.websocket;
+package zems.core.websocket;
 
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
-import zems.playground.contentbus.ContentBus;
-import zems.playground.contentbus.InMemoryContentBus;
+import zems.core.contentbus.ContentBus;
+import zems.core.contentbus.InMemoryContentBus;
 
 @Controller
 public class ContentBusController {

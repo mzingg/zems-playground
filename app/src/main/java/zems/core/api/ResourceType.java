@@ -1,4 +1,4 @@
-package zems.playground.api;
+package zems.core.api;
 
 public class ResourceType {
 

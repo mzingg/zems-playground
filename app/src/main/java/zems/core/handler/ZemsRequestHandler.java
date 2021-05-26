@@ -1,11 +1,11 @@
-package zems.playground.handler;
+package zems.core.handler;
 
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.web.servlet.function.ServerRequest;
 import org.springframework.web.servlet.function.ServerResponse;
-import zems.playground.api.ResourceType;
+import zems.core.api.ResourceType;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

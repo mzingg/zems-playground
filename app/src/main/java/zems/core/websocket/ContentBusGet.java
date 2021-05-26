@@ -1,4 +1,4 @@
-package zems.playground.websocket;
+package zems.core.websocket;
 
 public class ContentBusGet {
 
