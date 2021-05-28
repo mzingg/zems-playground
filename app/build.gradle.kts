@@ -1,5 +1,5 @@
 plugins {
-  id("zems-app") version "1.0-SNAPSHOT"
+  id("zems") version "1.0-SNAPSHOT"
 }
 
 version = parent!!.version
@@ -27,7 +27,7 @@ sourceSets {
 docker {
   name = "hub.docker.com/repository/docker/zinggengineering/zems-playground:${project.version}"
 
-  setDockerfile(layout.projectDirectory.file("src/main/ops/docker/Dockerfile").asFile)
+  setDockerfile(layout.projectDirectory.file("src/main/ops/docker/zems-app/Dockerfile").asFile)
   files(tasks.getByName("bootJar").outputs)
 
   buildArgs(
@@ -58,5 +58,3 @@ tasks.getByName("docker") {
   dependsOn("copyComposeFile")
   dependsOn("copyEnvFile")
 }
-
-
