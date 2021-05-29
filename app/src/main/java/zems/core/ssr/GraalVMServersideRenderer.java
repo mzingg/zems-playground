@@ -22,7 +22,7 @@ public class GraalVMServersideRenderer implements ServerSideRenderer {
   private static final String PROP_PATH = "path";
   private static final String METHOD_THEN = "then";
   private static final String METHOD_CATCH = "catch";
-  private static final String PREFIX_RENDER_PATH = "app/src/main/renders";
+  private static final String PREFIX_CANVAS_PATH = "app/src/main/canvas";
 
   private final ContentBus contentBus;
 
@@ -48,7 +48,7 @@ public class GraalVMServersideRenderer implements ServerSideRenderer {
 
       String renderName = renderType.substring(renderType.lastIndexOf('/'));
       String fileName = renderName + SUFFIX_JS_MODULE;
-      String scriptResourcePath = String.format("%s/%s/%s", PREFIX_RENDER_PATH, renderType, fileName);
+      String scriptResourcePath = String.format("%s/%s/%s", PREFIX_CANVAS_PATH, renderType, fileName);
       Path scriptPath = Paths.get(scriptResourcePath);
       Source jsSource = Source.newBuilder(LANGUAGE_JS, Files.readString(scriptPath), fileName)
           .build();

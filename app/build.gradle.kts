@@ -12,7 +12,7 @@ sourceSets {
       resources {
         srcDir("src/main/components")
         srcDir("src/main/modules")
-        srcDir("src/main/renders")
+        srcDir("src/main/canvas")
       }
     }
   }
