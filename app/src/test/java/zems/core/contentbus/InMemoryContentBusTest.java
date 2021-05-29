@@ -13,7 +13,7 @@ class InMemoryContentBusTest {
   @Test
   void getPropertiesWithInitialStateReturnsPageTitle() {
     InMemoryContentBus testObj = new InMemoryContentBus()
-        .withInitialState("zems/core/contentbus/initialState.json");
+        .withInitialState("zems/core/ContentBus/initialState.json");
 
     Object actual = testObj.getProperties("/content/playground/de/de");
     assertTrue(actual instanceof Map);

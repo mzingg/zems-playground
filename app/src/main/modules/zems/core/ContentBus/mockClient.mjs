@@ -91,6 +91,15 @@ export const withMockClient = () => ({
     } else if ('/content/playground/de/de>contentParsys') {
       return () => PageModel.contentParsys;
     }
+  },
+  registerUpdateHandler({ componentId, handlerFunction }) {
+    throw Error('operation not supported');
+  },
+  unRegisterUpdateHandler({ componentId }) {
+    throw Error('operation not supported');
+  },
+  sendUpdate({ componentId, payload }) {
+    throw Error('operation not supported');
   }
 });
 

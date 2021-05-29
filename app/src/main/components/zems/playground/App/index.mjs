@@ -8,12 +8,12 @@ export default function App(props) {
 
   const Title = useComponent({
     resourceType: 'zems/playground/PageTitle',
-    path: pagePath
+    loadFrom: pagePath
   })
 
   const ContentParsys = useComponent({
     resourceType: 'zems/core/Container',
-    path: `${pagePath}>contentParsys`
+    loadFrom: `${pagePath}>contentParsys`
   })
 
   return jsxLight`

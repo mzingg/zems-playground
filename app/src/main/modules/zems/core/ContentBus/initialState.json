@@ -10,14 +10,12 @@
       "resourceType": "zems/core/Container",
       "components": [
         {
-          "resourceType": "zems/playground/TextImage",
-          "text": "A lorem ipsum text 1",
-          "imageSrc": ""
+          "resourceType": "zems/playground/Text",
+          "text": "A lorem ipsum text 1"
         },
         {
-          "resourceType": "zems/playground/TextImage",
-          "text": "A lorem ipsum text 2",
-          "imageSrc": ""
+          "resourceType": "zems/playground/Text",
+          "text": "A lorem ipsum text 2"
         },
         {
           "resourceType": "zems/playground/TextImage",

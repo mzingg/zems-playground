@@ -15,9 +15,13 @@ public class ContentBusController {
   @MessageMapping("/contentbus/get")
   @SendTo("/topic/contentbus")
   public ContentBusGetResponse getModel(ContentBusGet message) {
-    return new ContentBusGetResponse()
-        .setPath(message.getPath())
-        .setClientId(message.getClientId())
-        .setProperties(contentBus.getProperties(message.getPath()));
+    return new ContentBusGetResponse("get", message.clientId(), message.path(), contentBus.getProperties(message.path()));
   }
+
+  @MessageMapping("/contentbus/update")
+  @SendTo("/topic/contentbus")
+  public ContentBusUpdateResponse updateModel(ContentBusUpdate message) {
+    return new ContentBusUpdateResponse("update", message.changedPath(), message.payload());
+  }
+
 }

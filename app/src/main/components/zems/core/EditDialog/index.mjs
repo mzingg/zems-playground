@@ -1,9 +1,12 @@
 import { jsxLight } from '../../../../modules/zems/core/React/index.mjs'; /*$ZEMS_SSR_RESOURCE$*/
+import { useKeyGenerator } from '../../../../modules/zems/core/ZemsReact/index.mjs'; /*$ZEMS_RESOURCE$*/
 
 export default function EditDialog(props) {
   const { dialogTitle } = props;
+  const createKey = useKeyGenerator();
+
   return jsxLight`
-    <div className="modal fade" id="EditDialogModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div key="${createKey()}" className="modal fade" id="EditDialogModal" tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
       <div className="modal-dialog">
         <div className="modal-content">
           <div className="modal-header">

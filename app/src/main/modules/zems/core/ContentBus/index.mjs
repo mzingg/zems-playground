@@ -7,19 +7,37 @@ import { withMockClient } from './mockClient.mjs';
 
 const useMockClient = false;
 
-let ContentBusLoaderImpl;
+let isAsyncImplemented = false;
+let ContentBusImpl;
 if (useMockClient) {
-  ContentBusLoaderImpl = ({ path }) => {
-    return withMockClient().loader({ path });
-  }
+  ContentBusImpl = withMockClient();
 } else if (isServerSide) {
-  ContentBusLoaderImpl = ({ path }) => {
-    return withGraalVMClient().loader({ path });
-  }
+  ContentBusImpl = withGraalVMClient();
 } else {
-  ContentBusLoaderImpl = async ({ path }) => {
-    return (await withContentBusClient()).loader({ path });
-  }
+  isAsyncImplemented = true;
+  ContentBusImpl = withContentBusClient; // this returns a Promise (-> can only be used in async functions)
 }
 
-export const ContentBusLoader = ContentBusLoaderImpl;
+export const contentBusLoader = isAsyncImplemented ? async ({ path }) => {
+  return (await ContentBusImpl()).loader({ path });
+} : ({ path }) => {
+  return ContentBusImpl.loader({ path });
+};
+
+export const registerUpdateHandler = isAsyncImplemented ? async ({ contentPath, componentId, handlerFunction }) => {
+  (await ContentBusImpl()).registerUpdateHandler({ contentPath, componentId, handlerFunction });
+} : ({ contentPath, componentId, handlerFunction }) => {
+  ContentBusImpl.registerUpdateHandler({ contentPath, componentId, handlerFunction });
+};
+
+export const unRegisterUpdateHandler = isAsyncImplemented ? async ({ componentId }) => {
+  (await ContentBusImpl()).unRegisterUpdateHandler({ componentId });
+} : ({ componentId }) => {
+  ContentBusImpl.unRegisterUpdateHandler({ componentId });
+};
+
+export const sendUpdate = isAsyncImplemented ? async ({ changedPath, payload }) => {
+  return (await ContentBusImpl()).sendUpdate({ changedPath, payload });
+} : ({ changedPath, payload }) => {
+  return ContentBusImpl.sendUpdate({ changedPath, payload });
+};

@@ -37,12 +37,13 @@ public class InMemoryContentBus implements ContentBus {
   private void flattenStateMap(String currentPath, Map<String, Object> currentState, Map<String, Map<String, Object>> flattenedTarget, int level) {
     String pathSuffix = level == 0 ? ">" : ":";
     Map<String, Object> props = new HashMap<>();
+    props.put("path", currentPath);
     for (Map.Entry<String, Object> entry : currentState.entrySet()) {
       if (entry.getValue() instanceof Map) {
         String referencePath = currentPath + pathSuffix + entry.getKey();
         String resourceType = (String) ((Map<String, Object>) entry.getValue()).getOrDefault("resourceType", "zems/core/Any");
 
-        props.put(entry.getKey(), Map.of("resourceType", resourceType, "path", referencePath));
+        props.put(entry.getKey(), Map.of("resourceType", resourceType, "loadFrom", referencePath, "path", referencePath));
 
         flattenStateMap(referencePath, (Map<String, Object>) entry.getValue(), flattenedTarget, level + 1);
       } else if (entry.getValue() instanceof ArrayList) {
@@ -53,7 +54,7 @@ public class InMemoryContentBus implements ContentBus {
           String referencePath = currentPath + pathSuffix + entry.getKey() + counter;
           String resourceType = (String) listState.getOrDefault("resourceType", "zems/core/Any");
           flattenStateMap(referencePath, listState, flattenedTarget, level + 1);
-          referenceList.add(Map.of("resourceType", resourceType, "path", referencePath));
+          referenceList.add(Map.of("resourceType", resourceType, "loadFrom", referencePath, "path", referencePath));
           counter++;
         }
         props.put(entry.getKey(), referenceList);
