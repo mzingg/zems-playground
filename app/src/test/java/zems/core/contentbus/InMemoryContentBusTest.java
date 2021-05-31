@@ -12,7 +12,7 @@ class InMemoryContentBusTest {
   @SuppressWarnings("unchecked")
   @Test
   void getPropertiesWithInitialStateReturnsPageTitle() {
-    InMemoryContentBus testObj = new InMemoryContentBus()
+    InMemoryContentBusSimple testObj = new InMemoryContentBusSimple()
         .withInitialState("zems/core/ContentBus/initialState.json");
 
     Object actual = testObj.getProperties("/content/playground/de/de");

@@ -1,7 +1,11 @@
 package zems.core.contentbus;
 
+import java.util.Optional;
+
 public interface ContentBus {
 
-  Object getProperties(String path);
+  Optional<Content> read(String path);
+
+  void write(Content content);
 
 }

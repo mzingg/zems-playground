@@ -10,11 +10,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class InMemoryContentBus implements ContentBus {
+public class InMemoryContentBusSimple implements ContentBusSimple {
 
   private Map<String, Map<String, Object>> content = new HashMap<>();
 
-  public InMemoryContentBus withInitialState(String jsonResourcePath) {
+  public InMemoryContentBusSimple withInitialState(String jsonResourcePath) {
     ClassPathResource resource = new ClassPathResource(jsonResourcePath);
     try (InputStream jsonStream = resource.getInputStream()) {
       Map<String, Map<String, Object>> complexInitialState = new ObjectMapper().readValue(jsonStream, new TypeReference<>() {

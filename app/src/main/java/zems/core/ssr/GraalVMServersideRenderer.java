@@ -4,7 +4,7 @@ import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
-import zems.core.contentbus.ContentBus;
+import zems.core.contentbus.ContentBusSimple;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -24,10 +24,10 @@ public class GraalVMServersideRenderer implements ServerSideRenderer {
   private static final String METHOD_CATCH = "catch";
   private static final String PREFIX_CANVAS_PATH = "app/src/main/canvas";
 
-  private final ContentBus contentBus;
+  private final ContentBusSimple contentBusSimple;
 
-  public GraalVMServersideRenderer(ContentBus contentBus) {
-    this.contentBus = contentBus;
+  public GraalVMServersideRenderer(ContentBusSimple contentBusSimple) {
+    this.contentBusSimple = contentBusSimple;
   }
 
   @Override
@@ -44,7 +44,7 @@ public class GraalVMServersideRenderer implements ServerSideRenderer {
         .build()) {
 
       context.getBindings(LANGUAGE_JS)
-          .putMember(SPECIAL_VARIABLE_CONTENT_BUS, contentBus);
+          .putMember(SPECIAL_VARIABLE_CONTENT_BUS, contentBusSimple);
 
       String renderName = renderType.substring(renderType.lastIndexOf('/'));
       String fileName = renderName + SUFFIX_JS_MODULE;
