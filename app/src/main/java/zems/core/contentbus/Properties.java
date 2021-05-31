@@ -120,15 +120,17 @@ public class Properties implements Packable<Properties> {
 
   public int packSize() {
     int dataSizeSum = 0;
-    dataSizeSum += Integer.BYTES;
-    for (Map.Entry<String, Value<?>> entry : store.entrySet()) {
-      dataSizeSum += Integer.BYTES; // key string length
-      dataSizeSum += entry.getKey().length() * Character.BYTES;
+    if (!store.isEmpty()) {
+      dataSizeSum += Integer.BYTES;
+      for (Map.Entry<String, Value<?>> entry : store.entrySet()) {
+        dataSizeSum += Integer.BYTES; // key string length
+        dataSizeSum += entry.getKey().length() * Character.BYTES;
 
-      dataSizeSum += Integer.BYTES; // className string length
-      dataSizeSum += entry.getValue().getClass().getName().length() * Character.BYTES;
+        dataSizeSum += Integer.BYTES; // className string length
+        dataSizeSum += entry.getValue().getClass().getName().length() * Character.BYTES;
 
-      dataSizeSum += entry.getValue().packSize();
+        dataSizeSum += entry.getValue().packSize();
+      }
     }
     return dataSizeSum;
   }

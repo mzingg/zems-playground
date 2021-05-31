@@ -1,6 +1,7 @@
 package zems.core.transaction;
 
 import zems.core.contentbus.Content;
+import zems.core.utils.BufferUtils;
 
 import java.io.IOException;
 import java.nio.BufferUnderflowException;
@@ -44,15 +45,22 @@ public class TransactionLog implements AutoCloseable {
         buffer.flip(); // set buffer to read mode
 
         boolean segmentTooLarge = false;
-        while (buffer.hasRemaining() && !segmentTooLarge) {
+        boolean endReached = false;
+        while (buffer.hasRemaining() && !segmentTooLarge && ! endReached) {
           buffer.mark(); // mark the beginning of this segment in case we exeed the readBuffer
-          try {
-            TransactionSegment segment = new TransactionSegment().unpack(buffer);
-            builder.accept(new Content(segment.getPath(), segment.getData()));
-          } catch (BufferUnderflowException ignored) {
-            // our segment spans over the current read buffer
-            buffer.reset(); // reset to the last mark so that the remaining amount is correct
-            segmentTooLarge = true;
+          byte separatorByte = buffer.get();
+          if (separatorByte == BufferUtils.RECORD_SEPARATOR_BYTE) {
+            try {
+              TransactionSegment segment = new TransactionSegment().unpack(buffer);
+
+              builder.accept(new Content(segment.getPath(), segment.getData()));
+            } catch (BufferUnderflowException ignored) {
+              // our segment spans over the current read buffer
+              buffer.reset(); // reset to the last mark so that the remaining amount is correct
+              segmentTooLarge = true;
+            }
+          } else {
+            endReached = true;
           }
         }
         if (segmentTooLarge && buffer.hasRemaining()) {
@@ -95,11 +103,13 @@ public class TransactionLog implements AutoCloseable {
     for (TransactionSegment segment : segments) {
       bufferSize += segment.packSize();
     }
+    bufferSize += segments.length; // separator bytes
 
     try (FileChannel logFileChannel = FileChannel.open(logPath, Set.of(CREATE, APPEND, SYNC))) {
       ByteBuffer logBuffer = ByteBuffer.allocate(bufferSize);
 
       for (TransactionSegment segment : segments) {
+        logBuffer.put(BufferUtils.RECORD_SEPARATOR_BYTE);
         segment.pack(logBuffer);
       }
       logBuffer.flip();

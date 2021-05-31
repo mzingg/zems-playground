@@ -9,11 +9,13 @@ import java.util.Optional;
 
 public class TransactionalContentBus implements ContentBus {
 
-  private HotTransactionLog transactionLog = new HotTransactionLog(new SequenceGenerator());
+  private HotTransactionLog transactionLog = new HotTransactionLog().setSequenceGenerator(new SequenceGenerator());
+
+  private IndexedPersistenceProvider persistenceProvider = new IndexedPersistenceProvider();
 
   @Override
   public Optional<Content> read(String path) {
-    return Optional.empty();
+    return persistenceProvider.readIndexed(path);
   }
 
   @Override
