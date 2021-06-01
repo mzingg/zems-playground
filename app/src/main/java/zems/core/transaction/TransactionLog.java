@@ -1,7 +1,7 @@
 package zems.core.transaction;
 
 import zems.core.contentbus.Content;
-import zems.core.utils.BufferUtils;
+import zems.core.utils.ZemsIoUtils;
 
 import java.io.IOException;
 import java.nio.BufferUnderflowException;
@@ -20,36 +20,41 @@ import static java.nio.file.StandardOpenOption.*;
 
 public class TransactionLog implements AutoCloseable {
 
-  private static final int READ_BUFFER_SIZE = 2 * 1024 * 1024; // 2MB
-  private final SequenceGenerator sequenceGenerator;
-  private Path logPath;
+  private static final int DEFAULT_READ_BUFFER_SIZE = 2 * 1024 * 1024; // 2MB
+  private static final int MINIMAL_READ_BUFFER_SIZE = 256;
 
-  public TransactionLog(SequenceGenerator sequenceGenerator) {
-    this.sequenceGenerator = sequenceGenerator;
+  private SequenceGenerator sequenceGenerator;
+  private Path logPath;
+  private int readBufferSize;
+  private boolean allowsSuperfluousData;
+
+  public TransactionLog() {
+    this.readBufferSize = DEFAULT_READ_BUFFER_SIZE;
+    this.allowsSuperfluousData = false;
   }
 
   @Override
-  public void close() throws Exception {
+  public void close() {
   }
 
   public Stream<Content> read() {
-    ensureLogPathExistsAndIsWritable();
+    ensureReady();
 
     Stream.Builder<Content> builder = Stream.builder();
 
     try (FileChannel logFileChannel = FileChannel.open(logPath, Set.of(READ))) {
 
-      ByteBuffer buffer = ByteBuffer.allocate(READ_BUFFER_SIZE);
+      ByteBuffer buffer = ByteBuffer.allocate(readBufferSize);
       int bytesRead = logFileChannel.read(buffer);
       while (bytesRead > 0) {
         buffer.flip(); // set buffer to read mode
 
         boolean segmentTooLarge = false;
         boolean endReached = false;
-        while (buffer.hasRemaining() && !segmentTooLarge && ! endReached) {
+        while (buffer.hasRemaining() && !segmentTooLarge && !endReached) {
           buffer.mark(); // mark the beginning of this segment in case we exeed the readBuffer
           byte separatorByte = buffer.get();
-          if (separatorByte == BufferUtils.RECORD_SEPARATOR_BYTE) {
+          if (separatorByte == ZemsIoUtils.RECORD_SEPARATOR_BYTE) {
             try {
               TransactionSegment segment = new TransactionSegment().unpack(buffer);
 
@@ -61,6 +66,9 @@ public class TransactionLog implements AutoCloseable {
             }
           } else {
             endReached = true;
+            if (!allowsSuperfluousData) {
+              throw new IllegalStateException("transaction log contains superflous data");
+            }
           }
         }
         if (segmentTooLarge && buffer.hasRemaining()) {
@@ -81,6 +89,7 @@ public class TransactionLog implements AutoCloseable {
 
   public TransactionLog append(Content... content) {
     Objects.requireNonNull(content);
+    ensureReady();
 
     List<TransactionSegment> segments = new ArrayList<>();
     for (Content value : content) {
@@ -97,7 +106,7 @@ public class TransactionLog implements AutoCloseable {
 
   public TransactionLog append(TransactionSegment... segments) {
     Objects.requireNonNull(segments);
-    ensureLogPathExistsAndIsWritable();
+    ensureReady();
 
     int bufferSize = 0;
     for (TransactionSegment segment : segments) {
@@ -109,7 +118,7 @@ public class TransactionLog implements AutoCloseable {
       ByteBuffer logBuffer = ByteBuffer.allocate(bufferSize);
 
       for (TransactionSegment segment : segments) {
-        logBuffer.put(BufferUtils.RECORD_SEPARATOR_BYTE);
+        logBuffer.put(ZemsIoUtils.RECORD_SEPARATOR_BYTE);
         segment.pack(logBuffer);
       }
       logBuffer.flip();
@@ -122,11 +131,52 @@ public class TransactionLog implements AutoCloseable {
     return this;
   }
 
+  public TransactionLog setSequenceGenerator(SequenceGenerator sequenceGenerator) {
+    Objects.requireNonNull(sequenceGenerator);
+
+    this.sequenceGenerator = sequenceGenerator;
+    return this;
+  }
+
+  public Path getLogPath() {
+    ensureLogPathExistsAndIsWritable();
+
+    return logPath;
+  }
+
   public TransactionLog setLogPath(Path logPath) {
     Objects.requireNonNull(logPath);
 
     this.logPath = logPath;
     return this;
+  }
+
+  public TransactionLog setReadBufferSize(int readBufferSize) {
+    if (readBufferSize < MINIMAL_READ_BUFFER_SIZE) {
+      throw new IllegalArgumentException("headBufferSize must be at least 256 bytes  - default value is (2MB)");
+    }
+
+    this.readBufferSize = readBufferSize;
+    return this;
+  }
+
+  /**
+   * USE WITH CARE: Should only be used for reading HOT logs in tests.
+   *
+   * @param allowsSuperfluousData {@link Boolean}
+   * @return this
+   */
+  public TransactionLog setAllowsSuperfluousData(boolean allowsSuperfluousData) {
+    this.allowsSuperfluousData = allowsSuperfluousData;
+    return this;
+  }
+
+  private void ensureReady() {
+    if (sequenceGenerator == null) {
+      throw new IllegalStateException("sequenceGenerator must not be null");
+    }
+
+    ensureLogPathExistsAndIsWritable();
   }
 
   private void ensureLogPathExistsAndIsWritable() {

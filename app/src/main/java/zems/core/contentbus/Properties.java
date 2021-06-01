@@ -10,8 +10,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-import static zems.core.utils.BufferUtils.packString;
-import static zems.core.utils.BufferUtils.unpackString;
+import static zems.core.utils.ZemsIoUtils.packString;
+import static zems.core.utils.ZemsIoUtils.unpackString;
 
 public class Properties implements Packable<Properties> {
 

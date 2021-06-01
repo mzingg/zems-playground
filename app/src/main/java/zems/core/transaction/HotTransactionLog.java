@@ -1,22 +1,19 @@
 package zems.core.transaction;
 
 import zems.core.contentbus.Content;
-import zems.core.utils.BufferUtils;
+import zems.core.utils.ZemsIoUtils;
 
 import java.io.IOException;
 import java.nio.BufferOverflowException;
-import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Set;
 
 import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
-import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
 import static java.nio.file.StandardOpenOption.*;
-import static zems.core.utils.BufferUtils.disposeBuffer;
+import static zems.core.utils.ZemsIoUtils.disposeBuffer;
 
 public class HotTransactionLog implements AutoCloseable {
 
@@ -26,7 +23,7 @@ public class HotTransactionLog implements AutoCloseable {
   private SequenceGenerator sequenceGenerator;
   private int headBufferSize;
 
-  private Path logPath;
+  private TransactionLog commitLog;
 
   private Path greenHeadPath;
   private Path redHeadPath;
@@ -45,13 +42,11 @@ public class HotTransactionLog implements AutoCloseable {
     if (sequenceGenerator == null) {
       throw new IllegalStateException("no SequenceGenerator set");
     }
-
-    try {
-      switchHead();
-      ensureLogPathExistsAndIsWritable();
-    } catch (IOException | NullPointerException e) {
-      throw new IllegalStateException(e);
+    if (commitLog == null) {
+      throw new IllegalStateException("commitLog must not be null");
     }
+
+    switchHead();
   }
 
   // TODO: critical function - has to be Thread safe
@@ -124,21 +119,7 @@ public class HotTransactionLog implements AutoCloseable {
       switchHead();
       writeSegment(segment); // to the new head
 
-      // commit inactive head to log
-      Path otherPath = getOtherHeadPathByCurrentState();
-      try (
-          FileChannel inactiveChannel = FileChannel.open(otherPath, Set.of(READ, WRITE));
-          FileChannel logChannel = FileChannel.open(logPath, Set.of(APPEND))
-      ) {
-        //logChannel.position(logChannel.size());
-        inactiveChannel.transferTo(0, lastGoodPosition, logChannel);
-
-        ByteBuffer zeros = ByteBuffer.allocate(headBufferSize);
-        inactiveChannel.position(0);
-        inactiveChannel.write(zeros);
-      } catch (IOException ioException) {
-        throw new IllegalStateException(ioException);
-      }
+      commitAndCleanInactiveHead(lastGoodPosition);
     }
 
     return this;
@@ -146,8 +127,14 @@ public class HotTransactionLog implements AutoCloseable {
 
   private void writeSegment(TransactionSegment segment) {
     headBuffer.mark(); // remeber last 'good' position in case we have to revert write
-    headBuffer.put(BufferUtils.RECORD_SEPARATOR_BYTE);
+    headBuffer.put(ZemsIoUtils.RECORD_SEPARATOR_BYTE);
     segment.pack(headBuffer);
+  }
+
+  private void commitAndCleanInactiveHead(int amountOfBytesToKeep) {
+    Path inactiveHead = getIncactiveHeadPathByCurrentState();
+    ZemsIoUtils.appendFileFrom(inactiveHead, commitLog.getLogPath(), amountOfBytesToKeep);
+    ZemsIoUtils.zeroFile(inactiveHead);
   }
 
   public HotTransactionLog setSequenceGenerator(SequenceGenerator sequenceGenerator) {
@@ -157,19 +144,19 @@ public class HotTransactionLog implements AutoCloseable {
     return this;
   }
 
+  public HotTransactionLog setCommitLog(TransactionLog commitLog) {
+    Objects.requireNonNull(commitLog);
+
+    this.commitLog = commitLog;
+    return this;
+  }
+
   public HotTransactionLog setHeadBufferSize(int headBufferSize) {
     if (headBufferSize < MINIMAL_HEAD_SIZE) {
       throw new IllegalArgumentException("headBufferSize must be at least 256 bytes  - default value is (2MB)");
     }
 
     this.headBufferSize = headBufferSize;
-    return this;
-  }
-
-  public HotTransactionLog setLogPath(Path logPath) {
-    Objects.requireNonNull(logPath);
-
-    this.logPath = logPath;
     return this;
   }
 
@@ -193,16 +180,6 @@ public class HotTransactionLog implements AutoCloseable {
     }
   }
 
-  private void ensureLogPathExistsAndIsWritable() throws IOException {
-    if (Files.exists(logPath, NOFOLLOW_LINKS)) {
-      if (!Files.isRegularFile(logPath, NOFOLLOW_LINKS) || !Files.isWritable(logPath)) {
-        throw new IllegalStateException("logPath(" + logPath + ") exists but is not writable");
-      }
-    } else {
-      Files.createFile(logPath);
-    }
-  }
-
   private Path getHeadPathByState(HeadState desiredState) {
     if (desiredState != HeadState.RED && desiredState != HeadState.GREEN) {
       throw new IllegalStateException("HotTransactionLog unsupported state (" + desiredState + ") for getHeadPathByState");
@@ -210,7 +187,7 @@ public class HotTransactionLog implements AutoCloseable {
     return desiredState == HeadState.RED ? redHeadPath : greenHeadPath;
   }
 
-  private Path getOtherHeadPathByCurrentState() {
+  private Path getIncactiveHeadPathByCurrentState() {
     if (state != HeadState.RED && state != HeadState.GREEN) {
       throw new IllegalStateException("HotTransactionLog unsupported state (" + state + ") for getOtherHeadPathByCurrentState");
     }

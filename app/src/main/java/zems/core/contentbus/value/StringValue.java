@@ -2,8 +2,8 @@ package zems.core.contentbus.value;
 
 import java.nio.ByteBuffer;
 
-import static zems.core.utils.BufferUtils.packString;
-import static zems.core.utils.BufferUtils.unpackString;
+import static zems.core.utils.ZemsIoUtils.packString;
+import static zems.core.utils.ZemsIoUtils.unpackString;
 
 public record StringValue(String value) implements Value<String> {
 

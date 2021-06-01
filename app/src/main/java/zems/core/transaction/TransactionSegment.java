@@ -7,8 +7,8 @@ import zems.core.contentbus.Properties;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
-import static zems.core.utils.BufferUtils.packString;
-import static zems.core.utils.BufferUtils.unpackString;
+import static zems.core.utils.ZemsIoUtils.packString;
+import static zems.core.utils.ZemsIoUtils.unpackString;
 
 public class TransactionSegment implements Packable<TransactionSegment> {
 
