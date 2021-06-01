@@ -2,8 +2,9 @@ package zems.core.transaction;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
-import zems.core.contentbus.Content;
-import zems.core.contentbus.Properties;
+import zems.core.concept.Content;
+import zems.core.concept.SequenceGenerator;
+import zems.core.properties.InMemoryProperties;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -34,9 +35,9 @@ public class HotTransactionLogTest {
     assertThrows(IllegalStateException.class, () -> {
       try (
           HotTransactionLog log = new HotTransactionLog()
-              .setSequenceGenerator(new SequenceGenerator())
+              .setSequenceGenerator(new AtomicSequenceGenerator())
       ) {
-        log.append(new Content("/a/path", new Properties()));
+        log.append(new Content("/a/path", new InMemoryProperties()));
       }
     });
   }
@@ -46,7 +47,7 @@ public class HotTransactionLogTest {
     assertThrows(IllegalStateException.class, () -> {
       try (
           HotTransactionLog log = new HotTransactionLog()
-              .setSequenceGenerator(new SequenceGenerator())
+              .setSequenceGenerator(new AtomicSequenceGenerator())
               .setGreenHeadPath(aTestPath("hot.tn.head"))
       ) {
         log.open();
@@ -59,7 +60,7 @@ public class HotTransactionLogTest {
     assertThrows(IllegalStateException.class, () -> {
       try (
           HotTransactionLog log = new HotTransactionLog()
-              .setSequenceGenerator(new SequenceGenerator())
+              .setSequenceGenerator(new AtomicSequenceGenerator())
       ) {
         log.open();
       }
@@ -76,15 +77,15 @@ public class HotTransactionLogTest {
     Path logPath = aTestPath("hot.tn");
     Path greenHeadPath = aTestPath("hot.green.tn");
     Path redHeadPath = aTestPath("hot.red.tn");
-    SequenceGenerator sequenceGenerator = new SequenceGenerator();
+    SequenceGenerator sequenceGenerator = new AtomicSequenceGenerator();
     List<Content> contentList = Arrays.asList(
-        new Content("/a/path", new Properties()),
-        new Content("/a/second/path", new Properties().put("hallo", "velo")),
-        new Content("/a/third/path", new Properties().put("third", 1234234))
+        new Content("/a/path", new InMemoryProperties()),
+        new Content("/a/second/path", new InMemoryProperties().put("hallo", "velo")),
+        new Content("/a/third/path", new InMemoryProperties().put("third", 1234234))
     );
 
     try (
-        TransactionLog commitLog = new TransactionLog()
+        MainTransactionLog commitLog = new MainTransactionLog()
             .setSequenceGenerator(sequenceGenerator)
             .setLogPath(logPath);
         HotTransactionLog log = new HotTransactionLog()
@@ -98,15 +99,15 @@ public class HotTransactionLogTest {
     }
 
     try (
-        TransactionLog redLogAfterOperation = new TransactionLog()
+        MainTransactionLog redLogAfterOperation = new MainTransactionLog()
             .setSequenceGenerator(sequenceGenerator)
             .setAllowsSuperfluousData(true)
             .setLogPath(redHeadPath);
-        TransactionLog greenLogAfterOperation = new TransactionLog()
+        MainTransactionLog greenLogAfterOperation = new MainTransactionLog()
             .setSequenceGenerator(sequenceGenerator)
             .setAllowsSuperfluousData(true)
             .setLogPath(greenHeadPath);
-        TransactionLog commitLogAfterOperation = new TransactionLog()
+        MainTransactionLog commitLogAfterOperation = new MainTransactionLog()
             .setSequenceGenerator(sequenceGenerator)
             .setLogPath(logPath)
     ) {
@@ -125,15 +126,15 @@ public class HotTransactionLogTest {
     Path logPath = aTestPath("hot.tn");
     Path greenHeadPath = aTestPath("hot.green.tn");
     Path redHeadPath = aTestPath("hot.red.tn");
-    SequenceGenerator sequenceGenerator = new SequenceGenerator();
+    SequenceGenerator sequenceGenerator = new AtomicSequenceGenerator();
     List<Content> contentList = Arrays.asList(
-        new Content("/a/path", new Properties()),
-        new Content("/a/second/path", new Properties().put("hallo", "velo lorem ipsum")),
-        new Content("/a/third/path", new Properties().put("third", 1234234))
+        new Content("/a/path", new InMemoryProperties()),
+        new Content("/a/second/path", new InMemoryProperties().put("hallo", "velo lorem ipsum")),
+        new Content("/a/third/path", new InMemoryProperties().put("third", 1234234))
     );
 
     try (
-        TransactionLog commitLog = new TransactionLog()
+        MainTransactionLog commitLog = new MainTransactionLog()
             .setSequenceGenerator(sequenceGenerator)
             .setLogPath(logPath);
         HotTransactionLog log = new HotTransactionLog()
@@ -148,15 +149,15 @@ public class HotTransactionLogTest {
     }
 
     try (
-        TransactionLog redLogAfterOperation = new TransactionLog()
+        MainTransactionLog redLogAfterOperation = new MainTransactionLog()
             .setSequenceGenerator(sequenceGenerator)
             .setAllowsSuperfluousData(true)
             .setLogPath(redHeadPath);
-        TransactionLog greenLogAfterOperation = new TransactionLog()
+        MainTransactionLog greenLogAfterOperation = new MainTransactionLog()
             .setSequenceGenerator(sequenceGenerator)
             .setAllowsSuperfluousData(true)
             .setLogPath(greenHeadPath);
-        TransactionLog commitLogAfterOperation = new TransactionLog()
+        MainTransactionLog commitLogAfterOperation = new MainTransactionLog()
             .setSequenceGenerator(sequenceGenerator)
             .setLogPath(logPath)
     ) {

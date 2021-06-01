@@ -1,7 +1,8 @@
 package zems.core.transaction;
 
 import org.junit.jupiter.api.Test;
-import zems.core.contentbus.Properties;
+import zems.core.concept.Properties;
+import zems.core.properties.InMemoryProperties;
 
 import java.nio.ByteBuffer;
 
@@ -12,7 +13,7 @@ class TransactionSegmentTest {
   @Test
   void bufferOperationTest() {
     ByteBuffer buffer = ByteBuffer.allocate(1024);
-    Properties data = new Properties()
+    Properties data = new InMemoryProperties()
         .put("aNumber", 1234567)
         .put("hallo", "velo");
 

@@ -1,6 +1,7 @@
 package zems.core.transaction;
 
-import zems.core.contentbus.Content;
+import zems.core.concept.Content;
+import zems.core.concept.SequenceGenerator;
 import zems.core.utils.ZemsIoUtils;
 
 import java.io.IOException;
@@ -23,7 +24,7 @@ public class HotTransactionLog implements AutoCloseable {
   private SequenceGenerator sequenceGenerator;
   private int headBufferSize;
 
-  private TransactionLog commitLog;
+  private MainTransactionLog commitLog;
 
   private Path greenHeadPath;
   private Path redHeadPath;
@@ -78,10 +79,6 @@ public class HotTransactionLog implements AutoCloseable {
       this.headChannel = FileChannel.open(getHeadPathByState(newState), Set.of(CREATE, READ, WRITE, SYNC));
       this.headBuffer = headChannel.map(READ_WRITE, 0, headBufferSize);
 
-      // TODO: update sequence counter from existing data in the log??
-      if (previousState == HeadState.INIT) {
-      }
-
       state = newState;
     } catch (IOException e) {
       throw new IllegalStateException(e);
@@ -92,7 +89,6 @@ public class HotTransactionLog implements AutoCloseable {
   public void close() throws Exception {
     headChannel.close();
   }
-
 
   public HotTransactionLog append(Content content) {
     Objects.requireNonNull(content);
@@ -144,7 +140,7 @@ public class HotTransactionLog implements AutoCloseable {
     return this;
   }
 
-  public HotTransactionLog setCommitLog(TransactionLog commitLog) {
+  public HotTransactionLog setCommitLog(MainTransactionLog commitLog) {
     Objects.requireNonNull(commitLog);
 
     this.commitLog = commitLog;

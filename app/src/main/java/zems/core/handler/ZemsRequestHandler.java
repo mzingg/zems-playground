@@ -5,7 +5,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.web.servlet.function.ServerRequest;
 import org.springframework.web.servlet.function.ServerResponse;
-import zems.core.api.ResourceType;
+import zems.core.concept.ResourceType;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

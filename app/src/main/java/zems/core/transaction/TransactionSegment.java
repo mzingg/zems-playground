@@ -1,8 +1,9 @@
 package zems.core.transaction;
 
 import org.graalvm.collections.Pair;
-import zems.core.contentbus.Packable;
-import zems.core.contentbus.Properties;
+import zems.core.concept.Packable;
+import zems.core.concept.Properties;
+import zems.core.properties.InMemoryProperties;
 
 import java.nio.ByteBuffer;
 import java.util.Objects;
@@ -19,7 +20,7 @@ public class TransactionSegment implements Packable<TransactionSegment> {
   public TransactionSegment() {
     this.path = "";
     this.sequenceId = 0;
-    this.data = new Properties();
+    this.data = new InMemoryProperties();
   }
 
   public String getPath() {
@@ -70,7 +71,7 @@ public class TransactionSegment implements Packable<TransactionSegment> {
     int segmentLength = buffer.getInt();
     long sequenceId = buffer.getLong();
     Pair<String, Integer> segmentPath = unpackString(buffer);
-    Properties data = new Properties().unpack(buffer);
+    Properties data = new InMemoryProperties().unpack(buffer);
 
     TransactionSegment result = new TransactionSegment();
     result.sequenceId = sequenceId;
