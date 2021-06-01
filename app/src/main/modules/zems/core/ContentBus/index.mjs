@@ -41,3 +41,9 @@ export const sendUpdate = isAsyncImplemented ? async ({ changedPath, payload }) 
 } : ({ changedPath, payload }) => {
   return ContentBusImpl.sendUpdate({ changedPath, payload });
 };
+
+export const sendToTopic = isAsyncImplemented ? async ({ topic, payload }) => {
+  return (await ContentBusImpl()).sendToTopic({ topic, payload });
+} : ({ topic, payload }) => {
+  return ContentBusImpl.sendToTopic({ topic, payload });
+};

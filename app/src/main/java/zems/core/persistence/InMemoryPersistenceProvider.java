@@ -1,20 +1,37 @@
-package zems.core.contentbus;
+package zems.core.persistence;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.core.io.ClassPathResource;
+import zems.core.concept.Content;
+import zems.core.concept.PersistenceProvider;
+import zems.core.concept.Properties;
+import zems.core.properties.InMemoryProperties;
+import zems.core.properties.value.AnyValue;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.nio.channels.ByteChannel;
+import java.util.*;
 
-public class InMemoryContentBusSimple implements ContentBusSimple {
+public class InMemoryPersistenceProvider implements PersistenceProvider {
 
-  private Map<String, Map<String, Object>> content = new HashMap<>();
+  private Map<String, Properties> content = new HashMap<>();
 
-  public InMemoryContentBusSimple withInitialState(String jsonResourcePath) {
+  @Override
+  public Optional<Content> read(String path) {
+    if (content.containsKey(path)) {
+      return Optional.of(new Content(path, content.get(path)));
+    }
+    return Optional.empty();
+  }
+
+  @Override
+  public Optional<ByteChannel> readBinary(String contentId) {
+    return Optional.empty();
+  }
+
+  public InMemoryPersistenceProvider withInitialState(String jsonResourcePath) {
     ClassPathResource resource = new ClassPathResource(jsonResourcePath);
     try (InputStream jsonStream = resource.getInputStream()) {
       Map<String, Map<String, Object>> complexInitialState = new ObjectMapper().readValue(jsonStream, new TypeReference<>() {
@@ -25,12 +42,24 @@ public class InMemoryContentBusSimple implements ContentBusSimple {
         flattenStateMap(entry.getKey(), entry.getValue(), flattenedState, 0);
       }
 
-      content = flattenedState;
+      content = toProperties(flattenedState);
     } catch (IOException e) {
       throw new IllegalStateException(e);
     }
 
     return this;
+  }
+
+  private Map<String, Properties> toProperties(Map<String, Map<String, Object>> map) {
+    HashMap<String, Properties> result = new LinkedHashMap<>();
+    for (Map.Entry<String, Map<String, Object>> entry : map.entrySet()) {
+      Properties properties = new InMemoryProperties();
+      for (Map.Entry<String, Object> propEntry : entry.getValue().entrySet()) {
+        properties.put(propEntry.getKey(), AnyValue.of(propEntry.getValue()));
+      }
+      result.put(entry.getKey(), properties);
+    }
+    return result;
   }
 
   @SuppressWarnings("unchecked")
@@ -63,15 +92,6 @@ public class InMemoryContentBusSimple implements ContentBusSimple {
       }
     }
     flattenedTarget.put(currentPath, props);
-  }
-
-  @Override
-  public Object getProperties(String path) {
-    Object props = Map.of();
-    if (content.containsKey(path)) {
-      props = content.get(path);
-    }
-    return props;
   }
 
 }

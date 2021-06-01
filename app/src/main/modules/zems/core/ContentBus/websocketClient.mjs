@@ -2,6 +2,13 @@
 
 import { uuidv4 } from '../../../../modules/zems/core/Lib/index.mjs'; /*$ZEMS_RESOURCE$*/
 
+const sendToTopic = (ContentBusClient) => ({ topic, payload }) => {
+  ContentBusClient.publish({
+    destination: `/zems${topic}`,
+    body: JSON.stringify(payload)
+  });
+}
+
 const sendUpdate = (ContentBusClient) => ({ changedPath, payload }) => {
   ContentBusClient.publish({
     destination: '/zems/contentbus/update',
@@ -116,6 +123,7 @@ export const withContentBusClient = () => {
       ContentBusClient.registerUpdateHandler = registerUpdateHandler(ContentBusClient);
       ContentBusClient.unRegisterUpdateHandler = unRegisterUpdateHandler(ContentBusClient);
       ContentBusClient.sendUpdate = sendUpdate(ContentBusClient);
+      ContentBusClient.sendToTopic = sendToTopic(ContentBusClient);
 
       ContentBusClient.activate();
     } else {

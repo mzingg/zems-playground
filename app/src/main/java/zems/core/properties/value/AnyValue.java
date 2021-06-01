@@ -2,7 +2,7 @@ package zems.core.properties.value;
 
 import zems.core.concept.Value;
 
-import java.util.Objects;
+import java.util.*;
 
 public interface AnyValue<I> extends Value<I> {
 
@@ -32,6 +32,15 @@ public interface AnyValue<I> extends Value<I> {
       return (Value<T>) new FractionalValue(((Float) value).doubleValue());
     } else if (value instanceof Boolean) {
       return (Value<T>) new BooleanValue((Boolean) value);
+    } else if (value instanceof Iterable) {
+      List<Value<?>> list = new ArrayList<>();
+      ((Iterable<?>)value).forEach(c -> list.add(AnyValue.of(c)));
+      return (Value<T>) new ListValue(Collections.unmodifiableList(list));
+    } else if (value instanceof Map) {
+      Map<String, Object> valueMap = (Map<String, Object>) value;
+      if (valueMap.containsKey("loadFrom")) {
+        return (Value<T>) new ReferenceValue(valueMap.get("loadFrom").toString());
+      }
     }
 
     throw new IllegalArgumentException("Unsupported value " + value);

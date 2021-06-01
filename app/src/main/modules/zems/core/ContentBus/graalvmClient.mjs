@@ -7,7 +7,10 @@ export const withGraalVMClient = () => {
 
   return {
     loader({ path }) {
-      return () => ContentBusService.getProperties(path);
+      return () => {
+        const properties = ContentBusService.read(path).get().properties();
+        return JSON.parse(Mapper.writeValueAsString(properties));
+      };
     },
     registerUpdateHandler({ componentId, handlerFunction }) {
       // not implemented on serverside
@@ -17,6 +20,9 @@ export const withGraalVMClient = () => {
     },
     sendUpdate({ componentId, payload }) {
       // TODO: theoretically this would be possible to implement - is there a use case that we send messages to the bus on SSR rendering?
+      // not implemented on serverside
+    },
+    sendToTopic({ topic, payload }) {
       // not implemented on serverside
     }
   }

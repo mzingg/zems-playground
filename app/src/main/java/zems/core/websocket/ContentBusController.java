@@ -3,19 +3,18 @@ package zems.core.websocket;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
-import zems.core.contentbus.ContentBusSimple;
-import zems.core.contentbus.InMemoryContentBusSimple;
+import zems.core.concept.ContentBus;
+import zems.core.contentbus.TransactionalContentBus;
 
 @Controller
 public class ContentBusController {
 
-  private final ContentBusSimple contentBusSimple = new InMemoryContentBusSimple()
-      .withInitialState("zems/core/ContentBus/initialState.json");
+  private final ContentBus contentBus = new TransactionalContentBus();
 
   @MessageMapping("/contentbus/get")
   @SendTo("/topic/contentbus")
   public ContentBusGetResponse getModel(ContentBusGet message) {
-    return new ContentBusGetResponse("get", message.clientId(), message.path(), contentBusSimple.getProperties(message.path()));
+    return new ContentBusGetResponse("get", message.clientId(), message.path(), contentBus.read(message.path()).get().properties());
   }
 
   @MessageMapping("/contentbus/update")

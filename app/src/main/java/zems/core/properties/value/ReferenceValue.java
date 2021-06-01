@@ -11,6 +11,10 @@ import static zems.core.utils.ZemsIoUtils.unpackString;
 
 public record ReferenceValue(String value, Content data) implements ContentReference {
 
+  public ReferenceValue(String value) {
+    this(value, null);
+  }
+
   public ReferenceValue() {
     this("", null);
   }

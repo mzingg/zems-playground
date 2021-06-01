@@ -1,10 +1,15 @@
 package zems.core.ssr;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
-import zems.core.contentbus.ContentBusSimple;
+import zems.core.concept.ContentBus;
+import zems.core.concept.Properties;
+import zems.core.properties.value.ListValue;
+import zems.core.properties.value.ValueJsonSupport;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -17,6 +22,7 @@ public class GraalVMServersideRenderer implements ServerSideRenderer {
 
   private static final String LANGUAGE_JS = "js";
   private static final String SPECIAL_VARIABLE_CONTENT_BUS = "ContentBusService";
+  private static final String SPECIAL_VARIABLE_MAPPER = "Mapper";
   private static final String SUFFIX_JS_MODULE = ".ssr.mjs";
   private static final String PROP_RESOURCE_TYPE = "resourceType";
   private static final String PROP_PATH = "path";
@@ -24,10 +30,18 @@ public class GraalVMServersideRenderer implements ServerSideRenderer {
   private static final String METHOD_CATCH = "catch";
   private static final String PREFIX_CANVAS_PATH = "app/src/main/canvas";
 
-  private final ContentBusSimple contentBusSimple;
+  private final ContentBus contentBus;
+  private final ObjectMapper mapper;
 
-  public GraalVMServersideRenderer(ContentBusSimple contentBusSimple) {
-    this.contentBusSimple = contentBusSimple;
+  public GraalVMServersideRenderer(ContentBus contentBus) {
+    this.contentBus = contentBus;
+
+    SimpleModule module = new SimpleModule("ValueJsonSupport")
+        .addSerializer(zems.core.concept.Value.class, new ValueJsonSupport.GenericValuesSerializer())
+        .addSerializer(ListValue.class, new ValueJsonSupport.ListValueSerializer())
+        .addSerializer(Properties.class, new ValueJsonSupport.PropertiesSerializer());
+
+    this.mapper = new ObjectMapper().registerModule(module);
   }
 
   @Override
@@ -43,8 +57,9 @@ public class GraalVMServersideRenderer implements ServerSideRenderer {
         .allowIO(true)
         .build()) {
 
-      context.getBindings(LANGUAGE_JS)
-          .putMember(SPECIAL_VARIABLE_CONTENT_BUS, contentBusSimple);
+      final Value jsBindings = context.getBindings(LANGUAGE_JS);
+      jsBindings.putMember(SPECIAL_VARIABLE_MAPPER, mapper);
+      jsBindings.putMember(SPECIAL_VARIABLE_CONTENT_BUS, contentBus);
 
       String renderName = renderType.substring(renderType.lastIndexOf('/'));
       String fileName = renderName + SUFFIX_JS_MODULE;

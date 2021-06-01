@@ -100,6 +100,9 @@ export const withMockClient = () => ({
   },
   sendUpdate({ componentId, payload }) {
     throw Error('operation not supported');
+  },
+  sendToTopic({ topic, payload }) {
+    throw Error('operation not supported');
   }
 });
 

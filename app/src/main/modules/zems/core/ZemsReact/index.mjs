@@ -113,10 +113,6 @@ const getReactComponentWithModel = ({ resourceType, loadFrom = null, modelLoader
   if (!isServerSide) {
     return null;
   }
-  const Component = SupportedComponents[resourceType];
-  if (!Component) {
-    throw Error(`Resource type ${resourceType} not supported for synchronous loading. Please call loadSupportedReactComponent first.`)
-  }
   const modelLoaderToUse = getLoader(loadFrom, modelLoader, props);
   if (typeof modelLoaderToUse !== 'function') {
     throw Error('Only functions are supported as modelLoader')
@@ -124,10 +120,16 @@ const getReactComponentWithModel = ({ resourceType, loadFrom = null, modelLoader
 
   const model = modelLoaderToUse();
   if (!model) {
-    throw Error(`Error loading model for component ${resourceType} (loadFrom=${loadFrom}, modelLoader=${modelLoader}, props=${props})`)
+    throw Error(`Error loading model (loadFrom=${loadFrom}, modelLoader=${modelLoader}, props=${props})`)
   }
   if (model.key) {
     throw Error('Model must not have \'key\' property as this is used for uniquely identifying React components.')
+  }
+
+  const resourceTypeToUse = resourceType || model.resourceType;
+  const Component = SupportedComponents[resourceTypeToUse];
+  if (!Component) {
+    throw Error(`Resource type ${resourceTypeToUse} not supported for synchronous loading. Please call loadSupportedReactComponent first.`)
   }
 
   const componentId = uuidv4();
@@ -135,16 +137,17 @@ const getReactComponentWithModel = ({ resourceType, loadFrom = null, modelLoader
 }
 
 const loadReactComponentWithModel = async ({ resourceType, loadFrom = null, modelLoader = null, props = null }) => {
-  const { default: Component } = await import(`../../../../components/${resourceType}/index.mjs`); /*$ZEMS_RESOURCE$*/
-
   const modelLoaderToUse = getLoader(loadFrom, modelLoader, props);
   const model = typeof modelLoaderToUse === 'function' ? modelLoaderToUse() : (modelLoaderToUse instanceof Promise ? await modelLoaderToUse : {});
   if (!model) {
-    throw Error(`Error loading model for component ${resourceType} (loadFrom=${loadFrom}, modelLoader=${modelLoader}, props=${props})`)
+    throw Error(`Error loading model (loadFrom=${loadFrom}, modelLoader=${modelLoader}, props=${props})`)
   }
   if (model.key) {
     throw Error('Model must not have \'key\' property as this is used for uniquely identifying React components.')
   }
+
+  const resourceTypeToUse = resourceType || model.resourceType;
+  const { default: Component } = await import(`../../../../components/${resourceTypeToUse}/index.mjs`); /*$ZEMS_RESOURCE$*/
 
   const { default: Editor } = await import('../../../../components/zems/core/Editor/index.mjs'); /*$ZEMS_RESOURCE$*/
 
