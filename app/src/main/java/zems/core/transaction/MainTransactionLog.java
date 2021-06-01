@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
@@ -24,6 +25,12 @@ public class MainTransactionLog implements TransactionLog<MainTransactionLog> {
 
   private static final int DEFAULT_READ_BUFFER_SIZE = 2 * 1024 * 1024; // 2MB
   private static final int MINIMAL_READ_BUFFER_SIZE = 256;
+
+  private static final Consumer<Long> NO_POSITION_ACTION = lastPosition -> {
+  };
+  private static final Consumer<TransactionSegment> NO_SEGMENT_ACTION = segment -> {
+  };
+
 
   private SequenceGenerator sequenceGenerator;
   private Path logPath;
@@ -39,53 +46,21 @@ public class MainTransactionLog implements TransactionLog<MainTransactionLog> {
   public void close() {
   }
 
+  public long seekLastPosition() {
+    long[] result = new long[]{0L};
+    internalRead(
+        NO_SEGMENT_ACTION,
+        lastPosition -> result[0] = lastPosition
+    );
+    return result[0];
+  }
+
   public Stream<Content> read() {
-    ensureReady();
-
     Stream.Builder<Content> builder = Stream.builder();
-
-    try (FileChannel logFileChannel = FileChannel.open(logPath, Set.of(READ))) {
-
-      ByteBuffer buffer = ByteBuffer.allocate(readBufferSize);
-      int bytesRead = logFileChannel.read(buffer);
-      while (bytesRead > 0) {
-        buffer.flip(); // set buffer to read mode
-
-        boolean segmentTooLarge = false;
-        boolean endReached = false;
-        while (buffer.hasRemaining() && !segmentTooLarge && !endReached) {
-          buffer.mark(); // mark the beginning of this segment in case we exeed the readBuffer
-          byte separatorByte = buffer.get();
-          if (separatorByte == ZemsIoUtils.RECORD_SEPARATOR_BYTE) {
-            try {
-              TransactionSegment segment = new TransactionSegment().unpack(buffer);
-
-              builder.accept(new Content(segment.getPath(), segment.getData()));
-            } catch (BufferUnderflowException ignored) {
-              // our segment spans over the current read buffer
-              buffer.reset(); // reset to the last mark so that the remaining amount is correct
-              segmentTooLarge = true;
-            }
-          } else {
-            endReached = true;
-            if (!allowsSuperfluousData) {
-              throw new IllegalStateException("transaction log contains superflous data");
-            }
-          }
-        }
-        if (segmentTooLarge && buffer.hasRemaining()) {
-          // rewind the fileChannel read pointer to the beginning of our last too large segment
-          logFileChannel.position(logFileChannel.position() - buffer.remaining());
-        }
-
-        buffer.clear();
-        bytesRead = logFileChannel.read(buffer);
-      }
-
-    } catch (IOException ioException) {
-      throw new IllegalStateException(ioException);
-    }
-
+    internalRead(
+        segment -> builder.accept(new Content(segment.getPath(), segment.getData())),
+        NO_POSITION_ACTION
+    );
     return builder.build();
   }
 
@@ -192,6 +167,54 @@ public class MainTransactionLog implements TransactionLog<MainTransactionLog> {
       } else {
         Files.createFile(logPath);
       }
+    } catch (IOException ioException) {
+      throw new IllegalStateException(ioException);
+    }
+  }
+
+  private void internalRead(Consumer<TransactionSegment> segmentConsumer, Consumer<Long> lastPositionConsumer) {
+    ensureReady();
+
+    try (FileChannel logFileChannel = FileChannel.open(logPath, Set.of(READ))) {
+
+      long lastGoodPosition = 0;
+
+      ByteBuffer buffer = ByteBuffer.allocate(readBufferSize);
+      int bytesRead = logFileChannel.read(buffer);
+      while (bytesRead > 0) {
+        buffer.flip(); // set buffer to read mode
+
+        boolean segmentTooLarge = false;
+        boolean endReached = false;
+        while (buffer.hasRemaining() && !segmentTooLarge && !endReached) {
+          buffer.mark(); // mark the beginning of this segment in case we exeed the readBuffer
+          byte separatorByte = buffer.get();
+          if (separatorByte == ZemsIoUtils.RECORD_SEPARATOR_BYTE) {
+            try {
+              segmentConsumer.accept(new TransactionSegment().unpack(buffer));
+              lastGoodPosition = logFileChannel.position();
+            } catch (BufferUnderflowException ignored) {
+              // our segment spans over the current read buffer
+              buffer.reset(); // reset to the last mark so that the remaining amount is correct
+              segmentTooLarge = true;
+            }
+          } else {
+            endReached = true;
+            if (!allowsSuperfluousData) {
+              throw new IllegalStateException("transaction log contains superflous data");
+            }
+          }
+        }
+        if (segmentTooLarge && buffer.hasRemaining()) {
+          // rewind the fileChannel read pointer to the beginning of our last too large segment
+          logFileChannel.position(logFileChannel.position() - buffer.remaining());
+        }
+
+        buffer.clear();
+        bytesRead = logFileChannel.read(buffer);
+      }
+
+      lastPositionConsumer.accept(lastGoodPosition);
     } catch (IOException ioException) {
       throw new IllegalStateException(ioException);
     }

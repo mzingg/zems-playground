@@ -1,6 +1,7 @@
 package zems.core.transaction;
 
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import zems.core.concept.Content;
 import zems.core.concept.SequenceGenerator;
@@ -171,6 +172,92 @@ public class HotTransactionLogTest {
     }
   }
 
+  @Test
+  void openWithExistingSwitchedHeadSwitchesToThePreviousUsedHead() throws Exception {
+    Path logPath = aTestPath("hot.tn");
+    Path greenHeadPath = aTestPath("hot.green.tn");
+    Path redHeadPath = aTestPath("hot.red.tn");
+    SequenceGenerator sequenceGenerator = new AtomicSequenceGenerator();
+    List<Content> contentList = Arrays.asList(
+        new Content("/a/path", new InMemoryProperties()),
+        new Content("/a/second/path", new InMemoryProperties().put("hallo", "velo lorem ipsum")),
+        new Content("/a/third/path", new InMemoryProperties().put("third", 1234234))
+    );
+
+    try (
+        MainTransactionLog commitLog = new MainTransactionLog()
+            .setSequenceGenerator(sequenceGenerator)
+            .setLogPath(logPath);
+        HotTransactionLog log = new HotTransactionLog()
+            .setHeadBufferSize(256) // make head small enough that it reaches its limit
+            .setSequenceGenerator(sequenceGenerator)
+            .setCommitLog(commitLog)
+            .setGreenHeadPath(greenHeadPath)
+            .setRedHeadPath(redHeadPath)
+    ) {
+      log.open();
+      contentList.forEach(log::append); // used current head -> green
+    }
+
+    // close log and reopen it for the assertion
+
+    try (
+        MainTransactionLog commitLog = new MainTransactionLog()
+            .setSequenceGenerator(sequenceGenerator)
+            .setLogPath(logPath);
+        HotTransactionLog log = new HotTransactionLog()
+            .setSequenceGenerator(sequenceGenerator)
+            .setCommitLog(commitLog)
+            .setGreenHeadPath(greenHeadPath)
+            .setRedHeadPath(redHeadPath)
+    ) {
+      log.open();
+      Assertions.assertEquals(HotTransactionLog.HeadState.GREEN, log.getState());
+    }
+  }
+
+  @Test
+  void openWithExistingNonSwitchedHeadSwitchesToThePreviousUsedHead() throws Exception {
+    Path logPath = aTestPath("hot.tn");
+    Path greenHeadPath = aTestPath("hot.green.tn");
+    Path redHeadPath = aTestPath("hot.red.tn");
+    SequenceGenerator sequenceGenerator = new AtomicSequenceGenerator();
+    List<Content> contentList = Arrays.asList(
+        new Content("/a/path", new InMemoryProperties()),
+        new Content("/a/second/path", new InMemoryProperties().put("hallo", "velo lorem ipsum")),
+        new Content("/a/third/path", new InMemoryProperties().put("third", 1234234))
+    );
+
+    try (
+        MainTransactionLog commitLog = new MainTransactionLog()
+            .setSequenceGenerator(sequenceGenerator)
+            .setLogPath(logPath);
+        HotTransactionLog log = new HotTransactionLog()
+            .setSequenceGenerator(sequenceGenerator)
+            .setCommitLog(commitLog)
+            .setGreenHeadPath(greenHeadPath)
+            .setRedHeadPath(redHeadPath)
+    ) {
+      log.open();
+      contentList.forEach(log::append); // used current head -> red
+    }
+
+    // close log and reopen it for the assertion
+
+    try (
+        MainTransactionLog commitLog = new MainTransactionLog()
+            .setSequenceGenerator(sequenceGenerator)
+            .setLogPath(logPath);
+        HotTransactionLog log = new HotTransactionLog()
+            .setSequenceGenerator(sequenceGenerator)
+            .setCommitLog(commitLog)
+            .setGreenHeadPath(greenHeadPath)
+            .setRedHeadPath(redHeadPath)
+    ) {
+      log.open();
+      Assertions.assertEquals(HotTransactionLog.HeadState.RED, log.getState());
+    }
+  }
 
   @AfterAll
   static void afterAll() throws IOException {
