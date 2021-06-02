@@ -1,4 +1,4 @@
-package zems.core.transaction;
+package zems.core.contentbus.transaction;
 
 import org.junit.jupiter.api.Test;
 import zems.core.concept.Properties;

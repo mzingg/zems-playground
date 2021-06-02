@@ -1,4 +1,4 @@
-package zems.core.transaction;
+package zems.core.contentbus.transaction;
 
 import zems.core.concept.SequenceGenerator;
 

@@ -1,4 +1,4 @@
-package zems.core.persistence;
+package zems.core.contentbus.persistence;
 
 import org.junit.jupiter.api.Test;
 import zems.core.concept.Content;

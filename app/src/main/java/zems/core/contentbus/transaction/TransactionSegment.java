@@ -1,4 +1,4 @@
-package zems.core.transaction;
+package zems.core.contentbus.transaction;
 
 import org.graalvm.collections.Pair;
 import zems.core.concept.Packable;

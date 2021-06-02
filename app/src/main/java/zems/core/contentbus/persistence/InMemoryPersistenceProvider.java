@@ -1,4 +1,4 @@
-package zems.core.persistence;
+package zems.core.contentbus.persistence;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
