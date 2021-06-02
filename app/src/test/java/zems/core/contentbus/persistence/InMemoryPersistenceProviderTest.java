@@ -13,7 +13,7 @@ class InMemoryPersistenceProviderTest {
   @Test
   void getPropertiesWithInitialStateReturnsPageTitle() {
     InMemoryPersistenceProvider testObj = new InMemoryPersistenceProvider()
-        .withInitialState("zems/core/ContentBus/initialState.json");
+        .loadFromClassPath("zems/core/ContentBus/initialState.json");
 
     Optional<Content> actual = testObj.read("/content/playground/de/de");
     assertTrue(actual.isPresent());

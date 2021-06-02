@@ -2,15 +2,39 @@ package zems.core.properties;
 
 import zems.core.concept.Properties;
 import zems.core.concept.Value;
+import zems.core.properties.value.AnyValue;
 
-import java.util.LinkedHashMap;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public class InMemoryProperties extends BaseProperties {
 
   private final LinkedHashMap<String, Value<?>> store = new LinkedHashMap<>();
+
+  public static Properties of(Object... keyValueList) {
+    InMemoryProperties result = new InMemoryProperties();
+    if (keyValueList != null) {
+      if (keyValueList.length % 2 != 0) {
+        throw new IllegalArgumentException("must provide a list with an even number of entries (key, value)");
+      }
+      for (int i = 0; i < keyValueList.length; i += 2) {
+        result.put(
+            keyValueList[i].toString(),
+            keyValueList[i + 1]
+        );
+      }
+    }
+    return result;
+  }
+
+  public static Properties from(Map<String, Object> stringObjectMap) {
+    InMemoryProperties result = new InMemoryProperties();
+    if (stringObjectMap != null) {
+      for (Map.Entry<String, Object> propEntry : stringObjectMap.entrySet()) {
+        result.put(propEntry.getKey(), AnyValue.of(propEntry.getValue()));
+      }
+    }
+    return result;
+  }
 
   @Override
   public Optional<Value<?>> find(String key) {
@@ -62,4 +86,10 @@ public class InMemoryProperties extends BaseProperties {
     return Objects.hash(store);
   }
 
+  @Override
+  public String toString() {
+    return new StringJoiner(", ", InMemoryProperties.class.getSimpleName() + "[", "]")
+        .add("store=" + store)
+        .toString();
+  }
 }

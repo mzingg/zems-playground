@@ -2,14 +2,15 @@ package zems.core.contentbus.persistence;
 
 import zems.core.concept.Content;
 import zems.core.concept.PersistenceProvider;
+import zems.core.concept.ReadOnlyPersistenceProvider;
 
 import java.nio.channels.ByteChannel;
 import java.util.Optional;
 
-public class IndexedPersistenceProvider implements PersistenceProvider {
+public class IndexedPersistenceProvider implements PersistenceProvider<IndexedPersistenceProvider> {
 
-  private PersistenceProvider index;
-  private PersistenceProvider store;
+  private ReadOnlyPersistenceProvider index;
+  private PersistenceProvider<?> store;
 
   @Override
   public Optional<Content> read(String path) {
@@ -21,4 +22,9 @@ public class IndexedPersistenceProvider implements PersistenceProvider {
     return index.readBinary(contentId).or(() -> store.readBinary(contentId));
   }
 
+  @Override
+  public IndexedPersistenceProvider write(Content content) {
+    store.write(content);
+    return this;
+  }
 }

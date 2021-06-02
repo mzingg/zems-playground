@@ -1,7 +1,10 @@
 package zems.core.properties;
 
 import org.graalvm.collections.Pair;
-import zems.core.concept.*;
+import zems.core.concept.BinaryReference;
+import zems.core.concept.ContentReference;
+import zems.core.concept.Properties;
+import zems.core.concept.Value;
 import zems.core.properties.value.AnyValue;
 import zems.core.properties.value.BinaryValue;
 import zems.core.properties.value.ReferenceValue;
@@ -36,6 +39,14 @@ public abstract class BaseProperties implements Properties {
     return (Optional<T>) find(key)
         .filter(candidate -> candidate.value().getClass().isAssignableFrom(className))
         .map(Value::value);
+  }
+
+  @Override
+  public Properties put(String key, Object value) {
+    Objects.requireNonNull(key);
+    Objects.requireNonNull(value);
+
+    return put(key, AnyValue.of(value));
   }
 
   public Properties put(String key, String value) {

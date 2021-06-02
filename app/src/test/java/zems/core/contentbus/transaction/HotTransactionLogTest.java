@@ -260,7 +260,7 @@ public class HotTransactionLogTest {
   }
 
   @AfterAll
-  static void afterAll() throws IOException {
+  static void cleanupDirectories() throws IOException {
     cleanupTestDirectories();
   }
 

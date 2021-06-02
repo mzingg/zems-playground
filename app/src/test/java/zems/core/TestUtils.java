@@ -15,6 +15,10 @@ public class TestUtils {
     FileUtils.deleteDirectory(resourcesPath.toFile());
   }
 
+  public static Path aTestPath() {
+    return aTestPath(".").normalize();
+  }
+
   public static Path aTestPath(String fileName) {
     String testName = findFirstZemsClassMethodName(Thread.currentThread().getStackTrace(), "aTestPath");
     try {
@@ -27,7 +31,7 @@ public class TestUtils {
         Files.createDirectory(testDirPath);
       }
 
-      return testDirPath.resolve(fileName);
+      return testDirPath.resolve(fileName).normalize();
     } catch (IOException ioException) {
       throw new IllegalStateException(ioException);
     }

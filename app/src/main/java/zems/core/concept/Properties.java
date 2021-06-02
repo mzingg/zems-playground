@@ -17,6 +17,8 @@ public interface Properties extends Packable<Properties> {
 
   Properties put(String key, Value<?> value);
 
+  Properties put(String key, Object value);
+
   Properties put(String key, String value);
 
   Properties put(String key, byte value);

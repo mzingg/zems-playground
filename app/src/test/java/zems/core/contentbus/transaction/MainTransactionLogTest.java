@@ -122,7 +122,7 @@ class MainTransactionLogTest {
 
 
   @AfterAll
-  static void afterAll() throws IOException {
+  static void cleanupDirectories() throws IOException {
     cleanupTestDirectories();
   }
 }

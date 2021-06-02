@@ -4,17 +4,19 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.core.io.ClassPathResource;
 import zems.core.concept.Content;
-import zems.core.concept.PersistenceProvider;
 import zems.core.concept.Properties;
+import zems.core.concept.ReadOnlyPersistenceProvider;
 import zems.core.properties.InMemoryProperties;
-import zems.core.properties.value.AnyValue;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.ByteChannel;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
-public class InMemoryPersistenceProvider implements PersistenceProvider {
+public class InMemoryPersistenceProvider implements ReadOnlyPersistenceProvider {
 
   private Map<String, Properties> content = new HashMap<>();
 
@@ -31,7 +33,7 @@ public class InMemoryPersistenceProvider implements PersistenceProvider {
     return Optional.empty();
   }
 
-  public InMemoryPersistenceProvider withInitialState(String jsonResourcePath) {
+  public InMemoryPersistenceProvider loadFromClassPath(String jsonResourcePath) {
     ClassPathResource resource = new ClassPathResource(jsonResourcePath);
     try (InputStream jsonStream = resource.getInputStream()) {
       Map<String, Map<String, Object>> complexInitialState = new ObjectMapper().readValue(jsonStream, new TypeReference<>() {
@@ -42,24 +44,14 @@ public class InMemoryPersistenceProvider implements PersistenceProvider {
         flattenStateMap(entry.getKey(), entry.getValue(), flattenedState, 0);
       }
 
-      content = toProperties(flattenedState);
+      for (Map.Entry<String, Map<String, Object>> entry : flattenedState.entrySet()) {
+        content.put(entry.getKey(), InMemoryProperties.from(entry.getValue()));
+      }
     } catch (IOException e) {
       throw new IllegalStateException(e);
     }
 
     return this;
-  }
-
-  private Map<String, Properties> toProperties(Map<String, Map<String, Object>> map) {
-    HashMap<String, Properties> result = new LinkedHashMap<>();
-    for (Map.Entry<String, Map<String, Object>> entry : map.entrySet()) {
-      Properties properties = new InMemoryProperties();
-      for (Map.Entry<String, Object> propEntry : entry.getValue().entrySet()) {
-        properties.put(propEntry.getKey(), AnyValue.of(propEntry.getValue()));
-      }
-      result.put(entry.getKey(), properties);
-    }
-    return result;
   }
 
   @SuppressWarnings("unchecked")

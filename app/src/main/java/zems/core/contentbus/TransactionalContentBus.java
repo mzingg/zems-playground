@@ -2,7 +2,7 @@ package zems.core.contentbus;
 
 import zems.core.concept.Content;
 import zems.core.concept.ContentBus;
-import zems.core.concept.PersistenceProvider;
+import zems.core.concept.ReadOnlyPersistenceProvider;
 import zems.core.concept.SequenceGenerator;
 import zems.core.contentbus.persistence.InMemoryPersistenceProvider;
 import zems.core.contentbus.transaction.AtomicSequenceGenerator;
@@ -16,8 +16,8 @@ import java.util.Optional;
 public class TransactionalContentBus implements ContentBus {
 
   private SequenceGenerator sequenceGenerator = new AtomicSequenceGenerator();
-  private PersistenceProvider persistenceProvider = new InMemoryPersistenceProvider()
-      .withInitialState("zems/core/ContentBus/initialState.json");
+  private ReadOnlyPersistenceProvider persistenceProvider = new InMemoryPersistenceProvider()
+      .loadFromClassPath("zems/core/ContentBus/initialState.json");
 
   private MainTransactionLog log = new MainTransactionLog();
 

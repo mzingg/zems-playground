@@ -1,5 +1,8 @@
 // noinspection JSUnresolvedVariable,JSUnresolvedFunction
 
+const JsonUtils = new (Java.type('zems.core.utils.ZemsJsonUtils'))()
+    .withOwnObjectMapper();
+
 export const withGraalVMClient = () => {
   if (!ContentBusService) {
     throw Error('ContentBusService not set - must be executed inside Zems SSR rendering context')
@@ -9,7 +12,7 @@ export const withGraalVMClient = () => {
     loader({ path }) {
       return () => {
         const properties = ContentBusService.read(path).get().properties();
-        return JSON.parse(Mapper.writeValueAsString(properties));
+        return JSON.parse(JsonUtils.asJsonString(properties));
       };
     },
     registerUpdateHandler({ componentId, handlerFunction }) {
