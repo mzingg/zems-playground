@@ -128,6 +128,7 @@ public class HotTransactionLog implements AutoCloseable {
 
   @Override
   public void close() throws Exception {
+    headBuffer.force();
     headChannel.close();
   }
 
