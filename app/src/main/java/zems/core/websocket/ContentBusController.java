@@ -4,17 +4,20 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
 import zems.core.concept.ContentBus;
-import zems.core.contentbus.TransactionalContentBus;
 
 @Controller
 public class ContentBusController {
 
-  private final ContentBus contentBus = new TransactionalContentBus();
+  private final ContentBus contentBus;
+
+  public ContentBusController(ContentBus contentBus) {
+    this.contentBus = contentBus;
+  }
 
   @MessageMapping("/contentbus/get")
   @SendTo("/topic/contentbus")
   public ContentBusGetResponse getModel(ContentBusGet message) {
-    return new ContentBusGetResponse("get", message.clientId(), message.path(), contentBus.read(message.path()).get().properties());
+    return new ContentBusGetResponse("get", message.clientId(), message.path(), contentBus.read(message.path()).orElseThrow().properties());
   }
 
   @MessageMapping("/contentbus/update")

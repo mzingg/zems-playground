@@ -1,7 +1,11 @@
 package zems.core.concept;
 
+import zems.core.properties.value.BinaryValue;
+
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 public interface Properties extends Packable<Properties> {
 
@@ -11,7 +15,21 @@ public interface Properties extends Packable<Properties> {
 
   Optional<ContentReference> findReference(String key);
 
+  default Stream<ContentReference> references() {
+    return keys().stream()
+        .map(this::findReference)
+        .filter(Optional::isPresent)
+        .map(Optional::get);
+  }
+
   Optional<BinaryReference> findBinary(String key);
+
+  default Stream<BinaryReference> binaries() {
+    return keys().stream()
+        .map(this::findBinary)
+        .filter(Optional::isPresent)
+        .map(Optional::get);
+  }
 
   <T> Optional<T> get(String key, Class<T> className);
 

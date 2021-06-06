@@ -21,15 +21,17 @@ public class FilePersistenceProvider implements PersistenceProvider<FilePersiste
 
   public FilePersistenceProvider(Path containerDirectory) {
     Objects.requireNonNull(containerDirectory);
+
     this.containerDirectory = containerDirectory;
   }
 
   @Override
   public Optional<Content> read(String path) {
-    ensureContainerDirExistsAndIsReadable();
+    Objects.requireNonNull(path);
+    ZemsIoUtils.ensureDirExistsAndIsReadable(containerDirectory);
+
     Path contentPath = containerDirectory.resolve("." + path);
     Path propertyPath = contentPath.resolve(PROPERTIES_FILENAME);
-
     if (Files.isRegularFile(propertyPath)) {
       return Optional.of(new Content(path, jsonUtils.fromPath(propertyPath)));
     }
@@ -38,13 +40,15 @@ public class FilePersistenceProvider implements PersistenceProvider<FilePersiste
   }
 
   @Override
-  public Optional<ByteChannel> readBinary(String contentId) {
+  public Optional<ByteChannel> readBinary(String binaryId) {
     return Optional.empty();
   }
 
   @Override
   public FilePersistenceProvider write(Content content) {
-    ensureContainerDirExistsAndIsWritable();
+    Objects.requireNonNull(content);
+    ZemsIoUtils.ensureDirExistsAndIsWritable(containerDirectory);
+
     try {
       Path propertyPath = containerDirectory.resolve("." + content.path()).resolve(PROPERTIES_FILENAME);
       ZemsIoUtils.createParentDirectories(propertyPath);
@@ -59,15 +63,4 @@ public class FilePersistenceProvider implements PersistenceProvider<FilePersiste
     ZemsIoUtils.write(path, jsonUtils.asJsonString(properties));
   }
 
-  private void ensureContainerDirExistsAndIsWritable() {
-    if (!Files.isDirectory(containerDirectory) && !Files.isWritable(containerDirectory)) {
-      throw new IllegalStateException("containerDirectory " + containerDirectory + " is not writable");
-    }
-  }
-
-  private void ensureContainerDirExistsAndIsReadable() {
-    if (!Files.isDirectory(containerDirectory) && !Files.isReadable(containerDirectory)) {
-      throw new IllegalStateException("containerDirectory " + containerDirectory + " is not readable");
-    }
-  }
 }

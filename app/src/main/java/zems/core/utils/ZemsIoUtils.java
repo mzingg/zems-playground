@@ -122,4 +122,16 @@ public class ZemsIoUtils {
     }
   }
 
+  public static void ensureDirExistsAndIsWritable(Path directory) {
+    if (!Files.isDirectory(directory) && !Files.isWritable(directory)) {
+      throw new IllegalStateException("directory " + directory + " is not writable");
+    }
+  }
+
+  public static void ensureDirExistsAndIsReadable(Path directory) {
+    if (!Files.isDirectory(directory) && !Files.isReadable(directory)) {
+      throw new IllegalStateException("directory " + directory + " is not readable");
+    }
+  }
+
 }

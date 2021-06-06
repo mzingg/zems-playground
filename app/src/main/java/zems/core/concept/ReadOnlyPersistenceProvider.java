@@ -7,6 +7,6 @@ public interface ReadOnlyPersistenceProvider {
 
   Optional<Content> read(String path);
 
-  Optional<ByteChannel> readBinary(String contentId);
+  Optional<ByteChannel> readBinary(String binaryId);
 
 }

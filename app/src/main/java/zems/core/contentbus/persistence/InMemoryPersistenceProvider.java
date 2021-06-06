@@ -4,36 +4,43 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.core.io.ClassPathResource;
 import zems.core.concept.Content;
+import zems.core.concept.PersistenceProvider;
 import zems.core.concept.Properties;
-import zems.core.concept.ReadOnlyPersistenceProvider;
 import zems.core.properties.InMemoryProperties;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.ByteChannel;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
-public class InMemoryPersistenceProvider implements ReadOnlyPersistenceProvider {
+public class InMemoryPersistenceProvider implements PersistenceProvider<InMemoryPersistenceProvider> {
 
-  private Map<String, Properties> content = new HashMap<>();
+  private final Map<String, Properties> contentStore = new HashMap<>();
 
   @Override
   public Optional<Content> read(String path) {
-    if (content.containsKey(path)) {
-      return Optional.of(new Content(path, content.get(path)));
+    Objects.requireNonNull(path);
+
+    if (contentStore.containsKey(path)) {
+      return Optional.of(new Content(path, contentStore.get(path)));
     }
     return Optional.empty();
   }
 
   @Override
-  public Optional<ByteChannel> readBinary(String contentId) {
+  public Optional<ByteChannel> readBinary(String binaryId) {
     return Optional.empty();
   }
 
+  @Override
+  public InMemoryPersistenceProvider write(Content content) {
+    contentStore.put(content.path(), content.properties());
+    return this;
+  }
+
   public InMemoryPersistenceProvider loadFromClassPath(String jsonResourcePath) {
+    Objects.requireNonNull(jsonResourcePath);
+
     ClassPathResource resource = new ClassPathResource(jsonResourcePath);
     try (InputStream jsonStream = resource.getInputStream()) {
       Map<String, Map<String, Object>> complexInitialState = new ObjectMapper().readValue(jsonStream, new TypeReference<>() {
@@ -45,7 +52,7 @@ public class InMemoryPersistenceProvider implements ReadOnlyPersistenceProvider 
       }
 
       for (Map.Entry<String, Map<String, Object>> entry : flattenedState.entrySet()) {
-        content.put(entry.getKey(), InMemoryProperties.from(entry.getValue()));
+        contentStore.put(entry.getKey(), InMemoryProperties.from(entry.getValue()));
       }
     } catch (IOException e) {
       throw new IllegalStateException(e);

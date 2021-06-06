@@ -1,30 +1,22 @@
 package zems.core.contentbus;
 
+import org.springframework.stereotype.Component;
 import zems.core.concept.Content;
 import zems.core.concept.ContentBus;
-import zems.core.concept.ReadOnlyPersistenceProvider;
-import zems.core.concept.SequenceGenerator;
-import zems.core.contentbus.persistence.InMemoryPersistenceProvider;
-import zems.core.contentbus.transaction.AtomicSequenceGenerator;
-import zems.core.contentbus.transaction.HotTransactionLog;
-import zems.core.contentbus.transaction.MainTransactionLog;
+import zems.core.concept.PersistenceProvider;
 
 import java.nio.channels.ByteChannel;
 import java.util.Objects;
 import java.util.Optional;
 
+@Component
 public class TransactionalContentBus implements ContentBus {
 
-  private SequenceGenerator sequenceGenerator = new AtomicSequenceGenerator();
-  private ReadOnlyPersistenceProvider persistenceProvider = new InMemoryPersistenceProvider()
-      .loadFromClassPath("zems/core/ContentBus/initialState.json");
+  private final PersistenceProvider<?> persistenceProvider;
 
-  private MainTransactionLog log = new MainTransactionLog();
-
-  private HotTransactionLog hotLog = new HotTransactionLog()
-      .setSequenceGenerator(sequenceGenerator)
-      .setCommitLog(log);
-
+  public TransactionalContentBus(PersistenceProvider<?> persistenceProvider) {
+    this.persistenceProvider = persistenceProvider;
+  }
 
   @Override
   public Optional<Content> read(String path) {
@@ -44,7 +36,7 @@ public class TransactionalContentBus implements ContentBus {
   public void write(Content content) {
     Objects.requireNonNull(content);
 
-    hotLog.append(content);
+    persistenceProvider.write(content);
   }
 
 }
