@@ -1,8 +1,6 @@
 package zems.core.contentbus.transaction;
 
-import zems.core.concept.Content;
-import zems.core.concept.SequenceGenerator;
-import zems.core.concept.TransactionLog;
+import zems.core.concept.*;
 import zems.core.utils.ZemsIoUtils;
 
 import java.io.IOException;
@@ -15,6 +13,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -31,19 +33,49 @@ public class MainTransactionLog implements TransactionLog<MainTransactionLog> {
   private static final Consumer<TransactionSegment> NO_SEGMENT_ACTION = segment -> {
   };
 
-
   private SequenceGenerator sequenceGenerator;
   private Path logPath;
   private int readBufferSize;
   private boolean allowsSuperfluousData;
+  private PersistenceProvider<?> store;
+  private final ReentrantLock writeLock = new ReentrantLock();
+  private final ReentrantLock commitLock = new ReentrantLock();
+  private final boolean schedulerEnabled;
+  private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+
+  private final TransactionLogStatistics stats;
 
   public MainTransactionLog() {
-    this.readBufferSize = DEFAULT_READ_BUFFER_SIZE;
-    this.allowsSuperfluousData = false;
+    this(0, new TransactionLogStatistics() {
+    });
   }
 
+  public MainTransactionLog(int commitScheduleIntervalInSeconds, TransactionLogStatistics stats) {
+    Objects.requireNonNull(stats);
+
+    this.stats = stats.reset();
+    this.readBufferSize = DEFAULT_READ_BUFFER_SIZE;
+    this.allowsSuperfluousData = false;
+    this.schedulerEnabled = commitScheduleIntervalInSeconds > 0;
+    if (schedulerEnabled) {
+      executor.scheduleWithFixedDelay(this::commit, 0, commitScheduleIntervalInSeconds, TimeUnit.SECONDS);
+    }
+  }
+
+  @SuppressWarnings("ResultOfMethodCallIgnored")
   @Override
   public void close() {
+    stats.reset();
+    if (schedulerEnabled) {
+      try {
+        executor.shutdown();
+        executor.awaitTermination(5, TimeUnit.SECONDS);
+      } catch (InterruptedException ignored) {
+        // ignore exception
+      } finally {
+        executor.shutdownNow();
+      }
+    }
   }
 
   public long seekLastPosition() {
@@ -92,6 +124,8 @@ public class MainTransactionLog implements TransactionLog<MainTransactionLog> {
     }
     bufferSize += segments.length; // separator bytes
 
+    // we open (and close) the file for each append so that we are able to do a snapshot
+    writeLock.lock();
     try (FileChannel logFileChannel = FileChannel.open(logPath, Set.of(CREATE, APPEND, SYNC))) {
       ByteBuffer logBuffer = ByteBuffer.allocate(bufferSize);
 
@@ -102,11 +136,76 @@ public class MainTransactionLog implements TransactionLog<MainTransactionLog> {
       logBuffer.flip();
 
       logFileChannel.write(logBuffer);
+      stats.countAppend().countAppendSegments(segments.length).countAppendAmountInBytes(bufferSize);
     } catch (IOException ioException) {
+      stats.countAppendError();
       throw new IllegalStateException(ioException);
+    } finally {
+      writeLock.unlock();
     }
 
     return this;
+  }
+
+  public void commit() {
+    // acquire a lock, so that only one commit action is performed at any given time (and threads)
+    commitLock.lock();
+    try {
+      stats.countCommitStarted();
+      if (store == null) {
+        throw new IllegalStateException("store must be set to be able to commit a transaction log");
+      }
+      Path snapshotPath = ZemsIoUtils.getSiblingWithNewExtension(
+          logPath, ".snapshot.tn"
+      );
+      Path errorPath = ZemsIoUtils.getSiblingWithNewExtension(
+          logPath, String.format(".error-%d.tn", System.currentTimeMillis())
+      );
+
+      // Make a snapshot of the current log.
+      // This is a blocking operation but using move and touch should be fast on all OS.
+      // This is also the reason we cannot keep the file handle open for this log.
+      writeLock.lock();
+      try {
+        ZemsIoUtils.snapshot(logPath, snapshotPath);
+      } finally {
+        writeLock.unlock();
+      }
+
+      MainTransactionLog snapshotLog = new MainTransactionLog()
+          .setLogPath(snapshotPath);
+      MainTransactionLog errorLog = new MainTransactionLog()
+          .setLogPath(errorPath);
+
+      // Now just read the snapshot log and call the write message for each content element.
+      // If an error occurs we append the content to the error log.
+      snapshotLog.read().forEach(content -> {
+        try {
+          store.write(content);
+          stats.countCommitContent();
+        } catch (IllegalArgumentException | IllegalStateException e) {
+          errorLog.append(content);
+          stats.countCommitError();
+        }
+      });
+
+      // cleanup snapshot file
+      try {
+        stats.countCommitAmountInBytes(Files.size(snapshotPath));
+        Files.delete(snapshotPath);
+        // when no error occurred we can delete the error log as well
+        if (Files.size(errorPath) == 0) {
+          Files.delete(errorPath);
+        }
+      } catch (IOException e) {
+        stats.countCommitFileCleanupError();
+        throw new IllegalStateException(e);
+      }
+
+      stats.countCommitFinished();
+    } finally {
+      commitLock.unlock();
+    }
   }
 
   @Override
@@ -150,6 +249,13 @@ public class MainTransactionLog implements TransactionLog<MainTransactionLog> {
     return this;
   }
 
+  public MainTransactionLog setStore(PersistenceProvider<?> store) {
+    Objects.requireNonNull(store);
+
+    this.store = store;
+    return this;
+  }
+
   private void ensureReady() {
     if (sequenceGenerator == null) {
       throw new IllegalStateException("sequenceGenerator must not be null");
@@ -187,7 +293,7 @@ public class MainTransactionLog implements TransactionLog<MainTransactionLog> {
         boolean segmentTooLarge = false;
         boolean endReached = false;
         while (buffer.hasRemaining() && !segmentTooLarge && !endReached) {
-          buffer.mark(); // mark the beginning of this segment in case we exeed the readBuffer
+          buffer.mark(); // mark the beginning of this segment in case we exceed the readBuffer
           byte separatorByte = buffer.get();
           if (separatorByte == ZemsIoUtils.RECORD_SEPARATOR_BYTE) {
             try {
@@ -201,7 +307,7 @@ public class MainTransactionLog implements TransactionLog<MainTransactionLog> {
           } else {
             endReached = true;
             if (!allowsSuperfluousData) {
-              throw new IllegalStateException("transaction log contains superflous data");
+              throw new IllegalStateException("transaction log contains superfluous data");
             }
           }
         }

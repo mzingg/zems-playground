@@ -57,4 +57,5 @@ public interface Properties extends Packable<Properties> {
 
   Properties reset();
 
+  Properties modifyFrom(Properties properties);
 }

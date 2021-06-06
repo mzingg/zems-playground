@@ -1,5 +1,7 @@
 package zems.core.properties;
 
+import zems.core.concept.DeletedValue;
+import zems.core.concept.ModifiedValue;
 import zems.core.concept.Properties;
 import zems.core.concept.Value;
 import zems.core.properties.value.AnyValue;
@@ -33,6 +35,26 @@ public class InMemoryProperties extends BaseProperties {
         result.put(propEntry.getKey(), AnyValue.of(propEntry.getValue()));
       }
     }
+    return result;
+  }
+
+  public static Properties mutationFrom(Properties base, Map<String, Object> mutationMap) {
+    Properties result = new InMemoryProperties();
+    mutationMap.forEach((key, value) -> {
+      Optional<Value<?>> baseValue = base.find(key);
+      if (baseValue.isPresent()) {
+        result.put(key, AnyValue.modifiedTo(baseValue.get().value(), value));
+      } else {
+        result.put(key, AnyValue.of(value));
+      }
+    });
+
+    base.keys().forEach(key -> {
+      if (result.find(key).isEmpty()) {
+        result.put(key, base.find(key).orElseThrow());
+      }
+    });
+
     return result;
   }
 
@@ -70,6 +92,30 @@ public class InMemoryProperties extends BaseProperties {
   public Properties reset() {
     store.clear();
 
+    return this;
+  }
+
+  @Override
+  public Properties modifyFrom(Properties properties) {
+    properties.keys().forEach(key -> {
+      Value<?> currentValue = properties.find(key).orElseThrow();
+      if (currentValue instanceof ModifiedValue) {
+        Object originalValue = ((ModifiedValue<?, ?>) currentValue).original();
+        Object newValue = ((ModifiedValue<?, ?>) currentValue).value();
+        Value<?> existingValue = store.get(key);
+        if (existingValue == null || !originalValue.equals(existingValue.value())) {
+          throw new IllegalStateException("value cannot be modified - incorrect original or existing value");
+        }
+        store.put(key, AnyValue.of(newValue));
+      } else if (currentValue instanceof DeletedValue) {
+        Object originalValue = ((DeletedValue<?>) currentValue).original();
+        Value<?> existingValue = store.get(key);
+        if (existingValue == null || !originalValue.equals(existingValue.value())) {
+          throw new IllegalStateException("value cannot be deleted - incorrect original or existing value");
+        }
+        store.remove(key);
+      }
+    });
     return this;
   }
 

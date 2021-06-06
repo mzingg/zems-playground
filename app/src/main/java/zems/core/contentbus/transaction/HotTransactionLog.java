@@ -2,6 +2,7 @@ package zems.core.contentbus.transaction;
 
 import zems.core.concept.Content;
 import zems.core.concept.SequenceGenerator;
+import zems.core.concept.TransactionLogStatistics;
 import zems.core.utils.ZemsIoUtils;
 
 import java.io.IOException;
@@ -12,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
 import static java.nio.file.StandardOpenOption.*;
@@ -35,9 +37,21 @@ public class HotTransactionLog implements AutoCloseable {
   private FileChannel headChannel;
   private MappedByteBuffer headBuffer;
 
+  private final ReentrantLock writeLock = new ReentrantLock();
+
+  private final TransactionLogStatistics stats;
+
   public HotTransactionLog() {
-    state = HeadState.INIT;
-    headBufferSize = DEFAULT_HEAD_BUFFER_SIZE;
+    this(new TransactionLogStatistics() {
+    });
+  }
+
+  public HotTransactionLog(TransactionLogStatistics stats) {
+    Objects.requireNonNull(stats);
+
+    this.stats = stats.reset();
+    this.state = HeadState.INIT;
+    this.headBufferSize = DEFAULT_HEAD_BUFFER_SIZE;
   }
 
   public void open() {
@@ -53,6 +67,7 @@ public class HotTransactionLog implements AutoCloseable {
 
   // TODO: critical function - has to be Thread safe
   private void switchHead() {
+    writeLock.lock();
     try {
       if (state == HeadState.SWITCHING) {
         throw new IllegalStateException("HotTransaction log is already in switching state");
@@ -73,7 +88,11 @@ public class HotTransactionLog implements AutoCloseable {
       switch (previousState) {
         case GREEN -> newState = HeadState.RED;
         case RED -> newState = HeadState.GREEN;
-        case INIT -> newState = findLastStateFromTransactionFiles();
+        case INIT -> {
+          ZemsIoUtils.touch(redHeadPath);
+          ZemsIoUtils.touch(greenHeadPath);
+          newState = findLastStateFromTransactionFiles();
+        }
         default -> throw new IllegalStateException("HotTransaction log is in an unknown state");
       }
 
@@ -84,6 +103,8 @@ public class HotTransactionLog implements AutoCloseable {
       state = newState;
     } catch (IOException e) {
       throw new IllegalStateException(e);
+    } finally {
+      writeLock.unlock();
     }
   }
 
@@ -128,8 +149,13 @@ public class HotTransactionLog implements AutoCloseable {
 
   @Override
   public void close() throws Exception {
-    headBuffer.force();
-    headChannel.close();
+    writeLock.lock();
+    try {
+      headBuffer.force();
+      headChannel.close();
+    } finally {
+      writeLock.unlock();
+    }
   }
 
   public HotTransactionLog append(Content content) {
@@ -141,23 +167,31 @@ public class HotTransactionLog implements AutoCloseable {
         .setSequenceId(sequenceGenerator.next())
         .setData(content.properties());
 
+    writeLock.lock();
     try {
-
       writeSegment(segment);
+    } catch (BufferOverflowException headIsFull) {
+      try {
+        // cleanup the already written portion of the buffer with an array of zeros
+        headBuffer.reset(); // go to the position marked before the last write
+        byte[] cleanup = new byte[headBuffer.remaining()];
+        headBuffer.put(cleanup);
+        headBuffer.reset();
+        int lastGoodPosition = headBuffer.position();
 
-    } catch (BufferOverflowException headIsFulll) {
+        switchHead();
+        writeSegment(segment); // to the new head
 
-      // cleanup the already written portion of the buffer with an array of zeros
-      headBuffer.reset(); // go to the position marked before the last write
-      byte[] cleanup = new byte[headBuffer.remaining()];
-      headBuffer.put(cleanup);
-      headBuffer.reset();
-      int lastGoodPosition = headBuffer.position();
-
-      switchHead();
-      writeSegment(segment); // to the new head
-
-      commitAndCleanInactiveHead(lastGoodPosition);
+        commitAndCleanInactiveHead(lastGoodPosition);
+      } catch (Throwable any) {
+        stats.countAppendError();
+        throw any;
+      }
+    } catch (Throwable any) {
+      stats.countAppendError();
+      throw any;
+    } finally {
+      writeLock.unlock();
     }
 
     return this;
@@ -205,13 +239,14 @@ public class HotTransactionLog implements AutoCloseable {
   }
 
   private void writeSegment(TransactionSegment segment) {
-    headBuffer.mark(); // remeber last 'good' position in case we have to revert write
+    headBuffer.mark(); // remember last 'good' position in case we have to revert write
     headBuffer.put(ZemsIoUtils.RECORD_SEPARATOR_BYTE);
     segment.pack(headBuffer);
+    stats.countAppend().countAppendSegments(1).countAppendAmountInBytes(segment.packSize() + 1);
   }
 
   private void commitAndCleanInactiveHead(int amountOfBytesToKeep) {
-    Path inactiveHead = getIncactiveHeadPathByCurrentState();
+    Path inactiveHead = getInactiveHeadPathByCurrentState();
     ZemsIoUtils.appendFileFrom(inactiveHead, commitLog.getLogPath(), amountOfBytesToKeep);
     ZemsIoUtils.zeroFile(inactiveHead);
   }
@@ -229,7 +264,7 @@ public class HotTransactionLog implements AutoCloseable {
     return desiredState == HeadState.RED ? redHeadPath : greenHeadPath;
   }
 
-  private Path getIncactiveHeadPathByCurrentState() {
+  private Path getInactiveHeadPathByCurrentState() {
     if (state != HeadState.RED && state != HeadState.GREEN) {
       throw new IllegalStateException("HotTransactionLog unsupported state (" + state + ") for getOtherHeadPathByCurrentState");
     }

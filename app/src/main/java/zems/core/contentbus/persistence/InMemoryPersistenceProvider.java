@@ -34,7 +34,12 @@ public class InMemoryPersistenceProvider implements PersistenceProvider<InMemory
 
   @Override
   public InMemoryPersistenceProvider write(Content content) {
-    contentStore.put(content.path(), content.properties());
+    Properties properties = content.properties();
+    if (contentStore.containsKey(content.path())) {
+      contentStore.get(content.path()).modifyFrom(properties);
+    } else {
+      contentStore.put(content.path(), properties);
+    }
     return this;
   }
 

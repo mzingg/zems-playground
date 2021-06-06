@@ -3,7 +3,11 @@ package zems.core.websocket;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
+import zems.core.concept.Content;
 import zems.core.concept.ContentBus;
+import zems.core.properties.InMemoryProperties;
+
+import java.util.Optional;
 
 @Controller
 public class ContentBusController {
@@ -23,7 +27,14 @@ public class ContentBusController {
   @MessageMapping("/contentbus/update")
   @SendTo("/topic/contentbus")
   public ContentBusUpdateResponse updateModel(ContentBusUpdate message) {
-    return new ContentBusUpdateResponse("update", message.changedPath(), message.payload());
+    String changedPath = message.changedPath();
+    Content modifiedContent = contentBus
+        .read(changedPath)
+        .map(c -> new Content(c.path(), InMemoryProperties.mutationFrom(c.properties(), message.payload())))
+        .orElse(new Content(changedPath, InMemoryProperties.from(message.payload())));
+
+    contentBus.write(modifiedContent);
+    return new ContentBusUpdateResponse("update", changedPath, modifiedContent.properties());
   }
 
 }

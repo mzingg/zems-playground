@@ -134,4 +134,29 @@ public class ZemsIoUtils {
     }
   }
 
+  @SuppressWarnings("UnstableApiUsage")
+  public static void snapshot(Path originalPath, Path snapshotPath) {
+    try {
+      Files.move(originalPath, snapshotPath);
+      MoreFiles.touch(originalPath);
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
+  @SuppressWarnings("UnstableApiUsage")
+  public static Path getSiblingWithNewExtension(Path path, String extension) {
+    String name = MoreFiles.getNameWithoutExtension(path);
+    return path.resolveSibling(name + extension);
+  }
+
+  @SuppressWarnings("UnstableApiUsage")
+  public static void touch(Path path) {
+    try {
+      ZemsIoUtils.createParentDirectories(path);
+      MoreFiles.touch(path);
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
+    }
+  }
 }
