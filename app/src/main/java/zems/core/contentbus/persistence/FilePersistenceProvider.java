@@ -1,15 +1,13 @@
 package zems.core.contentbus.persistence;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.file.PathUtils;
 import zems.core.concept.Content;
 import zems.core.concept.PersistenceProvider;
 import zems.core.concept.Properties;
+import zems.core.utils.ZemsIoUtils;
 import zems.core.utils.ZemsJsonUtils;
 
 import java.io.IOException;
 import java.nio.channels.ByteChannel;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -32,7 +30,7 @@ public class FilePersistenceProvider implements PersistenceProvider<FilePersiste
     Path contentPath = containerDirectory.resolve("." + path);
     Path propertyPath = contentPath.resolve(PROPERTIES_FILENAME);
 
-    if (PathUtils.isRegularFile(propertyPath)) {
+    if (Files.isRegularFile(propertyPath)) {
       return Optional.of(new Content(path, jsonUtils.fromPath(propertyPath)));
     }
 
@@ -49,7 +47,7 @@ public class FilePersistenceProvider implements PersistenceProvider<FilePersiste
     ensureContainerDirExistsAndIsWritable();
     try {
       Path propertyPath = containerDirectory.resolve("." + content.path()).resolve(PROPERTIES_FILENAME);
-      PathUtils.createParentDirectories(propertyPath);
+      ZemsIoUtils.createParentDirectories(propertyPath);
       applyProperties(propertyPath, content.properties());
     } catch (IOException ioException) {
       ioException.printStackTrace();
@@ -58,18 +56,18 @@ public class FilePersistenceProvider implements PersistenceProvider<FilePersiste
   }
 
   private void applyProperties(Path path, Properties properties) throws IOException {
-    FileUtils.write(path.toFile(), jsonUtils.asJsonString(properties), StandardCharsets.UTF_8);
+    ZemsIoUtils.write(path, jsonUtils.asJsonString(properties));
   }
 
   private void ensureContainerDirExistsAndIsWritable() {
     if (!Files.isDirectory(containerDirectory) && !Files.isWritable(containerDirectory)) {
-      throw new IllegalStateException("containerDirecotry " + containerDirectory + " is not writable");
+      throw new IllegalStateException("containerDirectory " + containerDirectory + " is not writable");
     }
   }
 
   private void ensureContainerDirExistsAndIsReadable() {
     if (!Files.isDirectory(containerDirectory) && !Files.isReadable(containerDirectory)) {
-      throw new IllegalStateException("containerDirecotry " + containerDirectory + " is not readable");
+      throw new IllegalStateException("containerDirectory " + containerDirectory + " is not readable");
     }
   }
 }

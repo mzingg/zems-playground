@@ -1,6 +1,6 @@
 package zems.core;
 
-import org.apache.commons.io.FileUtils;
+import zems.core.utils.ZemsIoUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -9,10 +9,10 @@ import java.util.Arrays;
 
 public class TestUtils {
 
-  public static void cleanupTestDirectories() throws IOException {
+  public static void cleanupTestDirectories() {
     Path resourcesPath = Path.of("build/test-execution-resources");
     System.gc(); // ensure all open files are released
-    FileUtils.deleteDirectory(resourcesPath.toFile());
+    ZemsIoUtils.deleteDirectory(resourcesPath);
   }
 
   public static Path aTestPath() {

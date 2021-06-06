@@ -1,5 +1,7 @@
 package zems.core.utils;
 
+import com.google.common.io.MoreFiles;
+import com.google.common.io.RecursiveDeleteOption;
 import org.graalvm.collections.Pair;
 
 import java.io.IOException;
@@ -9,6 +11,7 @@ import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -36,10 +39,8 @@ public class ZemsIoUtils {
     return Pair.create(new String(valueCharArray), Integer.BYTES + byteLength);
   }
 
-  /**
+  /*
    * Thanks to https://stackoverflow.com/questions/25238110/how-to-properly-close-mappedbytebuffer
-   *
-   * @param buffer
    */
   public static void disposeBuffer(MappedByteBuffer buffer) {
     if (buffer != null) {
@@ -91,6 +92,33 @@ public class ZemsIoUtils {
       sourceChannel.transferTo(0, amountOfBytes, targetChannel);
     } catch (IOException ioException) {
       throw new IllegalStateException(ioException);
+    }
+  }
+
+  @SuppressWarnings("UnstableApiUsage")
+  public static void createParentDirectories(Path path) {
+    try {
+      MoreFiles.createParentDirectories(path);
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
+  @SuppressWarnings("UnstableApiUsage")
+  public static void write(Path file, String value) {
+    try {
+      MoreFiles.asCharSink(file, StandardCharsets.UTF_8).write(value);
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
+  @SuppressWarnings("UnstableApiUsage")
+  public static void deleteDirectory(Path directory) {
+    try {
+      MoreFiles.deleteRecursively(directory, RecursiveDeleteOption.ALLOW_INSECURE);
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
     }
   }
 
