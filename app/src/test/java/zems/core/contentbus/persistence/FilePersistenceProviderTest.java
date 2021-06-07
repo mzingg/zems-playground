@@ -12,73 +12,92 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static zems.core.TestUtils.aTestPath;
-import static zems.core.TestUtils.cleanupTestDirectories;
+import static zems.core.TestUtils.*;
 
 class FilePersistenceProviderTest {
 
-  private final ZemsJsonUtils jsonUtils = new ZemsJsonUtils().withOwnObjectMapper();
+    private final ZemsJsonUtils jsonUtils = new ZemsJsonUtils();
 
-  @Test
-  void ctorWithContainerDirectoryNullThrowsExcpetion() {
-    assertThrows(NullPointerException.class, () -> new FilePersistenceProvider(null));
-  }
+    @Test
+    void ctorWithNullContentPathThrowsExcpetion() {
+        assertThrows(NullPointerException.class, () -> new FilePersistenceProvider(null, Path.of(".")));
+    }
 
-  @Test
-  void writeWithContainerDirNotExistingThrowsException() {
-    assertThrows(IllegalStateException.class, () -> new FilePersistenceProvider(
-        Path.of("nonexisting")).write(new Content("/path", new InMemoryProperties()))
-    );
-  }
+    @Test
+    void ctorWithNullBinaryPathThrowsExcpetion() {
+        assertThrows(NullPointerException.class, () -> new FilePersistenceProvider(Path.of("."), null));
+    }
 
-  @Test
-  void writeWithValidContentWritesRelativeJsonFile() throws IOException {
-    Path containerDirectory = aTestPath();
-    FilePersistenceProvider testObj = new FilePersistenceProvider(containerDirectory);
-    Content content = new Content(
-        "/a/subpath",
-        InMemoryProperties.of("hallo", "velo", "number", 42, "pi", 3.14159)
-    );
+    @Test
+    void writeWithContentDirNotExistingThrowsException() {
+        assertThrows(IllegalStateException.class, () -> new FilePersistenceProvider(Path.of("nonexisting"), aTestPath())
+          .write(new Content("/path", new InMemoryProperties()))
+        );
+    }
 
-    testObj.write(content);
+    @Test
+    void writeWithValidContentWritesRelativeJsonFile() throws IOException {
+        Path contentDirectory = aTestDirectory("content");
+        Path binaryDirectory = aTestDirectory("binaries");
+        FilePersistenceProvider testObj = new FilePersistenceProvider(contentDirectory, binaryDirectory);
+        Content content = new Content(
+          "/a/subpath",
+          InMemoryProperties.of("hallo", "velo", "number", 42, "pi", 3.14159)
+        );
 
-    assertTrue(Files.isDirectory(containerDirectory.resolve("./a/subpath")));
-    Path actualFilePath = containerDirectory.resolve("./a/subpath/.properties.json");
-    String actualFileContent = Files.readString(actualFilePath);
-    assertTrue(Files.exists(actualFilePath));
-    assertEquals(jsonUtils.asJsonString(content.properties()), actualFileContent);
-  }
+        testObj.write(content);
 
-  @Test
-  void readWithValidContentReturnsContent() {
-    Path containerDirectory = aTestPath();
-    FilePersistenceProvider testObj = new FilePersistenceProvider(containerDirectory);
-    final String contentPath = "/a/subpath";
-    Content expected = new Content(
-        contentPath,
-        InMemoryProperties.of("hallo", "velo", "number", 42, "pi", 3.14159)
-    );
-    testObj.write(expected);
+        assertTrue(Files.isDirectory(contentDirectory.resolve("./a/subpath")));
+        Path actualFilePath = contentDirectory.resolve("./a/subpath/.properties.json");
+        String actualFileContent = Files.readString(actualFilePath);
+        assertTrue(Files.exists(actualFilePath));
+        assertEquals(jsonUtils.asJsonString(content.properties()), actualFileContent);
+    }
 
-    Content actual = testObj.read(contentPath).orElseThrow();
+    @Test
+    void readWithValidContentReturnsContent() {
+        Path contentDirectory = aTestDirectory("content");
+        Path binaryDirectory = aTestDirectory("binaries");
+        FilePersistenceProvider testObj = new FilePersistenceProvider(contentDirectory, binaryDirectory);
+        final String contentPath = "/a/subpath";
+        Content expected = new Content(
+          contentPath,
+          InMemoryProperties.of("hallo", "velo", "number", 42, "pi", 3.14159)
+        );
+        testObj.write(expected);
 
-    assertEquals(expected, actual);
-  }
+        Content actual = testObj.read(contentPath).orElseThrow();
 
-  @Test
-  void readWithoutExistingContentReturnsEmpty() {
-    Path containerDirectory = aTestPath();
-    FilePersistenceProvider testObj = new FilePersistenceProvider(containerDirectory);
+        assertEquals(expected, actual);
+    }
 
-    Optional<Content> actual = testObj.read("/a/nonexistent/path");
+    @Test
+    void readWithoutExistingContentReturnsEmpty() {
+        Path contentDirectory = aTestDirectory("content");
+        Path binaryDirectory = aTestDirectory("binaries");
+        FilePersistenceProvider testObj = new FilePersistenceProvider(contentDirectory, binaryDirectory);
 
-    assertTrue(actual.isEmpty());
-  }
+        Optional<Content> actual = testObj.read("/a/nonexistent/path");
 
-  @AfterAll
-  static void cleanupDirectories() throws IOException {
-    cleanupTestDirectories();
-  }
+        assertTrue(actual.isEmpty());
+    }
 
+    @Test
+    void loadAndSaveFromJsonCreatesDirectoryWithContentsFromJson() {
+        Path contentDirectory = aTestDirectory("content");
+        Path binaryDirectory = aTestDirectory("binaries");
+
+        new FilePersistenceProvider(contentDirectory, binaryDirectory)
+          .initFromJson("zems/core/ContentBus/initialState.json");
+
+        assertTrue(Files.exists(contentDirectory.resolve("./content/playground/de/de/.properties.json")));
+        assertTrue(Files.exists(contentDirectory.resolve("./content/playground/de/de/contentParsys.json")));
+        assertTrue(Files.exists(contentDirectory.resolve("./content/playground/de/de/contentParsys/components8.json")));
+    }
+
+    @AfterAll
+    static void cleanupDirectories() {
+        cleanupTestDirectories();
+    }
 
 }

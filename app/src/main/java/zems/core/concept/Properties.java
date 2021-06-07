@@ -1,8 +1,5 @@
 package zems.core.concept;
 
-import zems.core.properties.value.BinaryValue;
-
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -33,7 +30,7 @@ public interface Properties extends Packable<Properties> {
 
   <T> Optional<T> get(String key, Class<T> className);
 
-  Properties put(String key, Value<?> value);
+  Properties putValue(String key, Value<?> value);
 
   Properties put(String key, Object value);
 

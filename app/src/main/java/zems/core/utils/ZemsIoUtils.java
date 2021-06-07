@@ -17,6 +17,7 @@ import java.nio.file.Path;
 
 import static java.nio.file.StandardOpenOption.*;
 
+@SuppressWarnings("UnstableApiUsage")
 public class ZemsIoUtils {
 
   public static byte RECORD_SEPARATOR_BYTE = 'O';
@@ -95,7 +96,6 @@ public class ZemsIoUtils {
     }
   }
 
-  @SuppressWarnings("UnstableApiUsage")
   public static void createParentDirectories(Path path) {
     try {
       MoreFiles.createParentDirectories(path);
@@ -104,7 +104,6 @@ public class ZemsIoUtils {
     }
   }
 
-  @SuppressWarnings("UnstableApiUsage")
   public static void write(Path file, String value) {
     try {
       MoreFiles.asCharSink(file, StandardCharsets.UTF_8).write(value);
@@ -113,7 +112,6 @@ public class ZemsIoUtils {
     }
   }
 
-  @SuppressWarnings("UnstableApiUsage")
   public static void deleteDirectory(Path directory) {
     try {
       MoreFiles.deleteRecursively(directory, RecursiveDeleteOption.ALLOW_INSECURE);
@@ -134,7 +132,6 @@ public class ZemsIoUtils {
     }
   }
 
-  @SuppressWarnings("UnstableApiUsage")
   public static void snapshot(Path originalPath, Path snapshotPath) {
     try {
       Files.move(originalPath, snapshotPath);
@@ -144,13 +141,11 @@ public class ZemsIoUtils {
     }
   }
 
-  @SuppressWarnings("UnstableApiUsage")
   public static Path getSiblingWithNewExtension(Path path, String extension) {
     String name = MoreFiles.getNameWithoutExtension(path);
     return path.resolveSibling(name + extension);
   }
 
-  @SuppressWarnings("UnstableApiUsage")
   public static void touch(Path path) {
     try {
       ZemsIoUtils.createParentDirectories(path);
@@ -159,4 +154,12 @@ public class ZemsIoUtils {
       throw new IllegalStateException(e);
     }
   }
+
+    public static void cleanDirectory(Path directory) {
+        try {
+            MoreFiles.deleteDirectoryContents(directory, RecursiveDeleteOption.ALLOW_INSECURE);
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
 }

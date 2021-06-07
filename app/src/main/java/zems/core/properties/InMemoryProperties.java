@@ -32,7 +32,7 @@ public class InMemoryProperties extends BaseProperties {
     InMemoryProperties result = new InMemoryProperties();
     if (stringObjectMap != null) {
       for (Map.Entry<String, Object> propEntry : stringObjectMap.entrySet()) {
-        result.put(propEntry.getKey(), AnyValue.of(propEntry.getValue()));
+        result.putValue(propEntry.getKey(), AnyValue.of(propEntry.getValue()));
       }
     }
     return result;
@@ -43,15 +43,15 @@ public class InMemoryProperties extends BaseProperties {
     mutationMap.forEach((key, value) -> {
       Optional<Value<?>> baseValue = base.find(key);
       if (baseValue.isPresent()) {
-        result.put(key, AnyValue.modifiedTo(baseValue.get().value(), value));
+        result.putValue(key, AnyValue.modifiedTo(baseValue.get().value(), value));
       } else {
-        result.put(key, AnyValue.of(value));
+        result.putValue(key, AnyValue.of(value));
       }
     });
 
     base.keys().forEach(key -> {
       if (result.find(key).isEmpty()) {
-        result.put(key, base.find(key).orElseThrow());
+        result.putValue(key, base.find(key).orElseThrow());
       }
     });
 
@@ -69,7 +69,7 @@ public class InMemoryProperties extends BaseProperties {
   }
 
   @Override
-  public Properties put(String key, Value<?> value) {
+  public Properties putValue(String key, Value<?> value) {
     Objects.requireNonNull(key);
     Objects.requireNonNull(value);
 

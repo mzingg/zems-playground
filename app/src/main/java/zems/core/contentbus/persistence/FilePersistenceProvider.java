@@ -10,57 +10,108 @@ import java.io.IOException;
 import java.nio.channels.ByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 public class FilePersistenceProvider implements PersistenceProvider<FilePersistenceProvider> {
 
-  private static final String PROPERTIES_FILENAME = ".properties.json";
-  private final Path containerDirectory;
-  private final ZemsJsonUtils jsonUtils = new ZemsJsonUtils().withOwnObjectMapper();
+    private static final String PROPERTIES_EXTENSION = ".json";
+    private static final String PROPERTIES_FILENAME = ".properties" + PROPERTIES_EXTENSION;
 
-  public FilePersistenceProvider(Path containerDirectory) {
-    Objects.requireNonNull(containerDirectory);
+    private static final ZemsJsonUtils jsonUtils = new ZemsJsonUtils();
 
-    this.containerDirectory = containerDirectory;
-  }
+    private final Path contentPath;
+    private final Path binaryPath;
 
-  @Override
-  public Optional<Content> read(String path) {
-    Objects.requireNonNull(path);
-    ZemsIoUtils.ensureDirExistsAndIsReadable(containerDirectory);
+    public FilePersistenceProvider(Path contentPath, Path binaryPath) {
+        Objects.requireNonNull(contentPath);
+        Objects.requireNonNull(binaryPath);
 
-    Path contentPath = containerDirectory.resolve("." + path);
-    Path propertyPath = contentPath.resolve(PROPERTIES_FILENAME);
-    if (Files.isRegularFile(propertyPath)) {
-      return Optional.of(new Content(path, jsonUtils.fromPath(propertyPath)));
+        this.contentPath = contentPath;
+        this.binaryPath = binaryPath;
     }
 
-    return Optional.empty();
-  }
+    @Override
+    public Optional<Content> read(String path) {
+        Objects.requireNonNull(path);
+        ZemsIoUtils.ensureDirExistsAndIsReadable(contentPath);
 
-  @Override
-  public Optional<ByteChannel> readBinary(String binaryId) {
-    return Optional.empty();
-  }
+        Path propertyPath = parsePath(path).resolveBelow(contentPath);
+        if (Files.isRegularFile(propertyPath)) {
+            return Optional.of(new Content(path, jsonUtils.fromPath(propertyPath)));
+        }
 
-  @Override
-  public FilePersistenceProvider write(Content content) {
-    Objects.requireNonNull(content);
-    ZemsIoUtils.ensureDirExistsAndIsWritable(containerDirectory);
-
-    try {
-      Path propertyPath = containerDirectory.resolve("." + content.path()).resolve(PROPERTIES_FILENAME);
-      ZemsIoUtils.createParentDirectories(propertyPath);
-      applyProperties(propertyPath, content.properties());
-    } catch (IOException ioException) {
-      ioException.printStackTrace();
+        return Optional.empty();
     }
-    return this;
-  }
 
-  private void applyProperties(Path path, Properties properties) throws IOException {
-    ZemsIoUtils.write(path, jsonUtils.asJsonString(properties));
-  }
+    @Override
+    public Optional<ByteChannel> readBinary(String binaryId) {
+        Objects.requireNonNull(binaryId);
+        ZemsIoUtils.ensureDirExistsAndIsReadable(binaryPath);
+
+        return Optional.empty();
+    }
+
+    @Override
+    public FilePersistenceProvider write(Content content) {
+        Objects.requireNonNull(content);
+        ZemsIoUtils.ensureDirExistsAndIsWritable(contentPath);
+
+        try {
+            Path propertyPath = parsePath(content.path())
+              .resolveBelow(contentPath);
+            ZemsIoUtils.createParentDirectories(propertyPath);
+            applyProperties(propertyPath, content.properties());
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
+        }
+        return this;
+    }
+
+    public FilePersistenceProvider initFromJson(String jsonResourcePath) {
+        Objects.requireNonNull(jsonResourcePath);
+        if (!Files.exists(contentPath)) {
+            try {
+                ZemsIoUtils.createParentDirectories(contentPath);
+                Files.createDirectory(contentPath);
+            } catch (IOException ioException) {
+                throw new IllegalStateException(ioException);
+            }
+        }
+
+        ZemsIoUtils.cleanDirectory(contentPath);
+
+        final Map<String, Properties> flatten = new ZemsJsonUtils()
+          .loadAndFlatten(jsonResourcePath);
+        flatten
+          .forEach((path, props) -> write(new Content(path, props)));
+
+        return this;
+    }
+
+    private void applyProperties(Path path, Properties properties) throws IOException {
+        ZemsIoUtils.write(path, jsonUtils.asJsonString(properties));
+    }
+
+    private static ParsedPath parsePath(String path) {
+        final int firstArrow = path.indexOf('>');
+        if (firstArrow > 0) {
+            List<String> propertyPathParts = Arrays.asList(path.substring(firstArrow + 1).split(":"));
+            return new ParsedPath(
+              path.substring(0, firstArrow),
+              String.join("/", propertyPathParts) + PROPERTIES_EXTENSION
+            );
+        } else {
+            return new ParsedPath(path, PROPERTIES_FILENAME);
+        }
+    }
+
+    private static record ParsedPath(String contentPath, String propertiesSubPath) {
+        public Path resolveBelow(Path containerPath) {
+            return containerPath
+              .resolve("." + contentPath())
+              .resolve(propertiesSubPath())
+              .normalize();
+        }
+    }
 
 }

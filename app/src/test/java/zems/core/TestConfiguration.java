@@ -7,7 +7,7 @@ import zems.core.utils.ZemsJsonUtils;
 @Configuration
 public class TestConfiguration {
 
-  private ZemsJsonUtils jsonUtils = new ZemsJsonUtils().withOwnObjectMapper();
+  private ZemsJsonUtils jsonUtils = new ZemsJsonUtils();
 
   @Bean
   public ZemsJsonUtils getJsonUtils() {

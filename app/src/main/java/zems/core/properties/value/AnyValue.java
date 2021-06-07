@@ -16,7 +16,9 @@ public interface AnyValue<I> extends Value<I> {
   static <T> Value<T> of(T value) {
     Objects.requireNonNull(value);
 
-    if (value instanceof String) {
+    if (value instanceof Value) {
+        return (Value<T>) value;
+    } else if (value instanceof String) {
       return (Value<T>) new StringValue((String) value);
     } else if (value instanceof Long) {
       return (Value<T>) new NumberValue((Long) value);

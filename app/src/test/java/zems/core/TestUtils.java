@@ -1,5 +1,6 @@
 package zems.core;
 
+import com.google.common.io.MoreFiles;
 import zems.core.utils.ZemsIoUtils;
 
 import java.io.IOException;
@@ -32,6 +33,20 @@ public class TestUtils {
       }
 
       return testDirPath.resolve(fileName).normalize();
+    } catch (IOException ioException) {
+      throw new IllegalStateException(ioException);
+    }
+  }
+
+  @SuppressWarnings("UnstableApiUsage")
+  public static Path aTestDirectory(String directoryName) {
+    try {
+      Path directoryPath = aTestPath(directoryName);
+      if (!Files.exists(directoryPath)) {
+        MoreFiles.createParentDirectories(directoryPath);
+        Files.createDirectory(directoryPath);
+      }
+      return directoryPath;
     } catch (IOException ioException) {
       throw new IllegalStateException(ioException);
     }

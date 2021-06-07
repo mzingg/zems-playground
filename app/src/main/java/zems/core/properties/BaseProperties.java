@@ -46,50 +46,50 @@ public abstract class BaseProperties implements Properties {
     Objects.requireNonNull(key);
     Objects.requireNonNull(value);
 
-    return put(key, AnyValue.of(value));
+    return putValue(key, AnyValue.of(value));
   }
 
   public Properties put(String key, String value) {
     Objects.requireNonNull(key);
     Objects.requireNonNull(value);
-    return put(key, AnyValue.of(value));
+    return putValue(key, AnyValue.of(value));
   }
 
   @Override
   public Properties put(String key, byte value) {
     Objects.requireNonNull(key);
-    return put(key, AnyValue.of(value));
+    return putValue(key, AnyValue.of(value));
   }
 
   @Override
   public Properties put(String key, short value) {
     Objects.requireNonNull(key);
-    return put(key, AnyValue.of(value));
+    return putValue(key, AnyValue.of(value));
   }
 
   public Properties put(String key, int value) {
     Objects.requireNonNull(key);
-    return put(key, AnyValue.of(value));
+    return putValue(key, AnyValue.of(value));
   }
 
   public Properties put(String key, long value) {
     Objects.requireNonNull(key);
-    return put(key, AnyValue.of(value));
+    return putValue(key, AnyValue.of(value));
   }
 
   public Properties put(String key, float value) {
     Objects.requireNonNull(key);
-    return put(key, AnyValue.of(value));
+    return putValue(key, AnyValue.of(value));
   }
 
   public Properties put(String key, double value) {
     Objects.requireNonNull(key);
-    return put(key, AnyValue.of(value));
+    return putValue(key, AnyValue.of(value));
   }
 
   public Properties put(String key, boolean value) {
     Objects.requireNonNull(key);
-    return put(key, AnyValue.of(value));
+    return putValue(key, AnyValue.of(value));
   }
 
   public Properties unpack(ByteBuffer buffer) {
@@ -108,7 +108,7 @@ public abstract class BaseProperties implements Properties {
         Value<?> unpackedValue = value.unpack(buffer);
         remainingLength -= unpackedValue.packSize();
 
-        put(key.getLeft(), unpackedValue);
+        putValue(key.getLeft(), unpackedValue);
       }
 
     } catch (InstantiationException | IllegalAccessException | ClassNotFoundException | NoSuchMethodException | InvocationTargetException e) {
