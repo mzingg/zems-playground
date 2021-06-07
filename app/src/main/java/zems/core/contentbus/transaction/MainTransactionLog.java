@@ -44,8 +44,7 @@ public class MainTransactionLog implements TransactionLog<MainTransactionLog> {
     private PersistenceProvider<?> store;
 
     public MainTransactionLog() {
-        this(0, new TransactionLogStatistics() {
-        });
+        this(0, new TransactionLogStatistics() {});
     }
 
     public MainTransactionLog(int commitScheduleIntervalInSeconds, TransactionLogStatistics stats) {
@@ -56,23 +55,28 @@ public class MainTransactionLog implements TransactionLog<MainTransactionLog> {
         this.allowsSuperfluousData = false;
         this.schedulerEnabled = commitScheduleIntervalInSeconds > 0;
         if (schedulerEnabled) {
-            executor.scheduleWithFixedDelay(this::commit, 0, commitScheduleIntervalInSeconds, TimeUnit.SECONDS);
+            executor.scheduleWithFixedDelay(this::commit, commitScheduleIntervalInSeconds, commitScheduleIntervalInSeconds, TimeUnit.SECONDS);
         }
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Override
     public void close() {
-        stats.reset();
-        if (schedulerEnabled) {
-            try {
+        writeLock.lock();
+        commitLock.lock();
+        try {
+            stats.reset();
+            if (schedulerEnabled) {
                 executor.shutdown();
                 executor.awaitTermination(5, TimeUnit.SECONDS);
-            } catch (InterruptedException ignored) {
-                // ignore exception
-            } finally {
-                executor.shutdownNow();
             }
+        } catch (InterruptedException e) {
+            throw new IllegalStateException(e);
+        } finally {
+            executor.shutdownNow();
+
+            commitLock.unlock();
+            writeLock.unlock();
         }
     }
 
@@ -146,13 +150,13 @@ public class MainTransactionLog implements TransactionLog<MainTransactionLog> {
     }
 
     public void commit() {
+        if (store == null) {
+            return;
+        }
         // acquire a lock, so that only one commit action is performed at any given time (and threads)
         commitLock.lock();
         try {
             stats.countCommitStarted();
-            if (store == null) {
-                throw new IllegalStateException("store must be set to be able to commit a transaction log");
-            }
             Path snapshotPath = ZemsIoUtils.getSiblingWithNewExtension(
               logPath, ".snapshot.tn"
             );
@@ -170,30 +174,35 @@ public class MainTransactionLog implements TransactionLog<MainTransactionLog> {
                 writeLock.unlock();
             }
 
-            MainTransactionLog snapshotLog = new MainTransactionLog()
-              .setLogPath(snapshotPath);
-            MainTransactionLog errorLog = new MainTransactionLog()
-              .setLogPath(errorPath);
+            try (
+              MainTransactionLog snapshotLog = new MainTransactionLog()
+                .setSequenceGenerator(sequenceGenerator)
+                .setLogPath(snapshotPath);
+              MainTransactionLog errorLog = new MainTransactionLog()
+                .setSequenceGenerator(sequenceGenerator)
+                .setLogPath(errorPath)
+            ) {
 
-            // Now just read the snapshot log and call the write message for each content element.
-            // If an error occurs we append the content to the error log.
-            snapshotLog.read().forEach(content -> {
-                try {
-                    store.write(content);
-                    stats.countCommitContent();
-                } catch (IllegalArgumentException | IllegalStateException e) {
-                    errorLog.append(content);
-                    stats.countCommitError();
-                }
-            });
+                // Now just read the snapshot log and call the write message for each content element.
+                // If an error occurs we append the content to the error log.
+                snapshotLog.read().forEach(content -> {
+                    try {
+                        store.write(content);
+                        stats.countCommitContent();
+                    } catch (IllegalArgumentException | IllegalStateException e) {
+                        errorLog.append(content);
+                        stats.countCommitError();
+                    }
+                });
+            }
 
             // cleanup snapshot file
             try {
                 stats.countCommitAmountInBytes(Files.size(snapshotPath));
-                Files.delete(snapshotPath);
+                Files.deleteIfExists(snapshotPath);
                 // when no error occurred we can delete the error log as well
-                if (Files.size(errorPath) == 0) {
-                    Files.delete(errorPath);
+                if (Files.exists(errorPath) && Files.size(errorPath) == 0) {
+                    Files.deleteIfExists(errorPath);
                 }
             } catch (IOException e) {
                 stats.countCommitFileCleanupError();

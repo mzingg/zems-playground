@@ -46,5 +46,16 @@ public interface TransactionLogStatistics {
         return this;
     }
 
+    default TransactionLogStatistics countHeadSwitch() {
+        return this;
+    }
+
+    default TransactionLogStatistics countHeadSwitchError() {
+        return this;
+    }
+
+    default TransactionLogStatistics countHeadCommitAmountInBytes(int amountInBytes) {
+        return this;
+    }
 
 }

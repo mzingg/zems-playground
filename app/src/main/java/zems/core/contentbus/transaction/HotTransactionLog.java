@@ -13,6 +13,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
@@ -23,7 +26,8 @@ public class HotTransactionLog implements AutoCloseable {
 
     private static final int DEFAULT_HEAD_BUFFER_SIZE = 2 * 1024 * 1024; // 2MB
     private static final int MINIMAL_HEAD_SIZE = 256;
-    private final ReentrantLock writeLock = new ReentrantLock();
+    private static final int DEFAULT_COMMIT_INTERVAL_IN_SECONDS = 60;
+
     private final TransactionLogStatistics stats;
     private SequenceGenerator sequenceGenerator;
     private int headBufferSize;
@@ -34,17 +38,21 @@ public class HotTransactionLog implements AutoCloseable {
     private FileChannel headChannel;
     private MappedByteBuffer headBuffer;
 
+    private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+    private final ReentrantLock writeLock = new ReentrantLock();
+
     public HotTransactionLog() {
-        this(new TransactionLogStatistics() {
-        });
+        this(DEFAULT_COMMIT_INTERVAL_IN_SECONDS, new TransactionLogStatistics() {});
     }
 
-    public HotTransactionLog(TransactionLogStatistics stats) {
+    public HotTransactionLog(int commitScheduleIntervalInSeconds, TransactionLogStatistics stats) {
         Objects.requireNonNull(stats);
 
         this.stats = stats.reset();
         this.state = HeadState.INIT;
         this.headBufferSize = DEFAULT_HEAD_BUFFER_SIZE;
+
+        executor.scheduleWithFixedDelay(this::switchHead, commitScheduleIntervalInSeconds, commitScheduleIntervalInSeconds, TimeUnit.SECONDS);
     }
 
     public void open() {
@@ -71,7 +79,9 @@ public class HotTransactionLog implements AutoCloseable {
             state = HeadState.SWITCHING;
 
             // close previous channel and dispose buffer to make sure that the following file reads are safe
+            int lastGoodPosition = 0;
             if (headChannel != null) {
+                lastGoodPosition = headBuffer.position();
                 headChannel.close();
                 disposeBuffer(headBuffer);
             }
@@ -93,8 +103,18 @@ public class HotTransactionLog implements AutoCloseable {
             this.headChannel = FileChannel.open(getHeadPathByState(newState), Set.of(CREATE, READ, WRITE, SYNC));
             this.headBuffer = headChannel.map(READ_WRITE, 0, headBufferSize);
 
+            if (previousState != HeadState.INIT) {
+                stats.countHeadSwitch();
+            }
             state = newState;
+
+            if (lastGoodPosition > 0) {
+                commitAndCleanInactiveHead(lastGoodPosition);
+                commitLog.commit();
+                stats.countHeadCommitAmountInBytes(lastGoodPosition);
+            }
         } catch (IOException e) {
+            stats.countHeadSwitchError();
             throw new IllegalStateException(e);
         } finally {
             writeLock.unlock();
@@ -140,13 +160,22 @@ public class HotTransactionLog implements AutoCloseable {
         return redLastPosition > 0 ? HeadState.RED : HeadState.GREEN;
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     @Override
-    public void close() throws Exception {
+    public void close() {
         writeLock.lock();
         try {
+            stats.reset();
+
             headBuffer.force();
             headChannel.close();
+
+            executor.shutdown();
+            executor.awaitTermination(5, TimeUnit.SECONDS);
+        } catch (InterruptedException | IOException e) {
+            throw new IllegalStateException(e);
         } finally {
+            executor.shutdownNow();
             writeLock.unlock();
         }
     }
@@ -170,12 +199,9 @@ public class HotTransactionLog implements AutoCloseable {
                 byte[] cleanup = new byte[headBuffer.remaining()];
                 headBuffer.put(cleanup);
                 headBuffer.reset();
-                int lastGoodPosition = headBuffer.position();
 
                 switchHead();
                 writeSegment(segment); // to the new head
-
-                commitAndCleanInactiveHead(lastGoodPosition);
             } catch (Throwable any) {
                 stats.countAppendError();
                 throw any;

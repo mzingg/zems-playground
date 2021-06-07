@@ -82,14 +82,7 @@ public class FilePersistenceProvider implements PersistenceProvider<FilePersiste
 
     public FilePersistenceProvider initFromJson(String jsonResourcePath) {
         Objects.requireNonNull(jsonResourcePath);
-        if (!Files.exists(contentPath)) {
-            try {
-                ZemsIoUtils.createParentDirectories(contentPath);
-                Files.createDirectory(contentPath);
-            } catch (IOException ioException) {
-                throw new IllegalStateException(ioException);
-            }
-        }
+        ZemsIoUtils.ensureDirExistsAndIsWritable(contentPath);
 
         ZemsIoUtils.cleanDirectory(contentPath);
 

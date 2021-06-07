@@ -44,4 +44,9 @@ public class IndexedPersistenceProvider implements PersistenceProvider<IndexedPe
         index.update(Stream.of(content));
         return this;
     }
+
+    @Override
+    public void close() throws Exception {
+        store.close();
+    }
 }

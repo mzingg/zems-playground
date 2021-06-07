@@ -11,7 +11,10 @@ import zems.core.contentbus.transaction.AtomicSequenceGenerator;
 import zems.core.contentbus.transaction.HotTransactionLog;
 import zems.core.contentbus.transaction.InMemoryTransactionLogStatistics;
 import zems.core.contentbus.transaction.MainTransactionLog;
+import zems.core.utils.ZemsIoUtils;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 @Configuration
@@ -30,9 +33,19 @@ public class ContentBusConfiguration implements TransactionalContentBusConfigure
 
         AtomicSequenceGenerator sequenceGenerator = new AtomicSequenceGenerator();
 
-        PersistenceProvider<?> store = new FilePersistenceProvider(
+        FilePersistenceProvider store = new FilePersistenceProvider(
           contentDirectory, binariesDirectory
         );
+        if (!Files.exists(contentDirectory)) {
+            try {
+                ZemsIoUtils.createParentDirectories(contentDirectory);
+                Files.createDirectory(contentDirectory);
+                store.initFromJson("zems/core/ContentBus/initialState.json");
+            } catch (IOException ioException) {
+                throw new IllegalStateException(ioException);
+            }
+        }
+
 
         InMemoryTransactionLogStatistics stats = new InMemoryTransactionLogStatistics();
 
@@ -41,15 +54,13 @@ public class ContentBusConfiguration implements TransactionalContentBusConfigure
           .setSequenceGenerator(sequenceGenerator)
           .setStore(store);
 
-        HotTransactionLog hotLog = new HotTransactionLog()
+        HotTransactionLog hotLog = new HotTransactionLog(30, stats)
           .setSequenceGenerator(sequenceGenerator)
           .setCommitLog(log)
           .setRedHeadPath(mainLogRedPath)
           .setGreenHeadPath(mainLogGreenPath);
 
-        LogBackedPersistenceProvider logBackedStore = new LogBackedPersistenceProvider(
-          store, hotLog
-        );
+        LogBackedPersistenceProvider logBackedStore = new LogBackedPersistenceProvider(store, hotLog);
 
         return new IndexedPersistenceProvider(
           logBackedStore,

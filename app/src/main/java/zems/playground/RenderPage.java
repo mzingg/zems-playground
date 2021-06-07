@@ -21,5 +21,6 @@ public class RenderPage {
           "/content/playground/de/de"
         ));
 
+        System.exit(0);
     }
 }

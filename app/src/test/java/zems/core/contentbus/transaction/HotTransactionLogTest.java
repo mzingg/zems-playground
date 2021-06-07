@@ -5,9 +5,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import zems.core.concept.Content;
 import zems.core.concept.SequenceGenerator;
+import zems.core.contentbus.persistence.InMemoryPersistenceProvider;
 import zems.core.properties.InMemoryProperties;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
@@ -21,7 +21,7 @@ import static zems.core.TestUtils.cleanupTestDirectories;
 public class HotTransactionLogTest {
 
     @AfterAll
-    static void cleanupDirectories() throws IOException {
+    static void cleanupDirectories() {
         cleanupTestDirectories();
     }
 
@@ -79,7 +79,7 @@ public class HotTransactionLogTest {
     }
 
     @Test
-    void appendWithEnoughSpaceInHeadIsSuccessful() throws Exception {
+    void appendWithEnoughSpaceInHeadIsSuccessful() {
         Path logPath = aTestPath("hot.tn");
         Path greenHeadPath = aTestPath("hot.green.tn");
         Path redHeadPath = aTestPath("hot.red.tn");
@@ -128,7 +128,7 @@ public class HotTransactionLogTest {
     }
 
     @Test
-    void appendWhileReachingEndOfHeadSwitchesHeadBuffer() throws Exception {
+    void appendWhileReachingEndOfHeadSwitchesHeadBuffer() {
         Path logPath = aTestPath("hot.tn");
         Path greenHeadPath = aTestPath("hot.green.tn");
         Path redHeadPath = aTestPath("hot.red.tn");
@@ -178,7 +178,7 @@ public class HotTransactionLogTest {
     }
 
     @Test
-    void openWithExistingSwitchedHeadSwitchesToThePreviousUsedHead() throws Exception {
+    void openWithExistingSwitchedHeadSwitchesToThePreviousUsedHead() {
         Path logPath = aTestPath("hot.tn");
         Path greenHeadPath = aTestPath("hot.green.tn");
         Path redHeadPath = aTestPath("hot.red.tn");
@@ -192,7 +192,8 @@ public class HotTransactionLogTest {
         try (
           MainTransactionLog commitLog = new MainTransactionLog()
             .setSequenceGenerator(sequenceGenerator)
-            .setLogPath(logPath);
+            .setLogPath(logPath)
+            .setStore(new InMemoryPersistenceProvider());
           HotTransactionLog log = new HotTransactionLog()
             .setHeadBufferSize(256) // make head small enough that it reaches its limit
             .setSequenceGenerator(sequenceGenerator)
@@ -209,7 +210,8 @@ public class HotTransactionLogTest {
         try (
           MainTransactionLog commitLog = new MainTransactionLog()
             .setSequenceGenerator(sequenceGenerator)
-            .setLogPath(logPath);
+            .setLogPath(logPath)
+            .setStore(new InMemoryPersistenceProvider());
           HotTransactionLog log = new HotTransactionLog()
             .setSequenceGenerator(sequenceGenerator)
             .setCommitLog(commitLog)
@@ -222,7 +224,7 @@ public class HotTransactionLogTest {
     }
 
     @Test
-    void openWithExistingNonSwitchedHeadSwitchesToThePreviousUsedHead() throws Exception {
+    void openWithExistingNonSwitchedHeadSwitchesToThePreviousUsedHead() {
         Path logPath = aTestPath("hot.tn");
         Path greenHeadPath = aTestPath("hot.green.tn");
         Path redHeadPath = aTestPath("hot.red.tn");

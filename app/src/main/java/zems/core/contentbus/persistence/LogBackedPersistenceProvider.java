@@ -7,7 +7,7 @@ import zems.core.contentbus.transaction.HotTransactionLog;
 import java.nio.channels.ByteChannel;
 import java.util.Optional;
 
-public class LogBackedPersistenceProvider implements PersistenceProvider<LogBackedPersistenceProvider>, AutoCloseable {
+public class LogBackedPersistenceProvider implements PersistenceProvider<LogBackedPersistenceProvider> {
 
     private final PersistenceProvider<?> store;
     private HotTransactionLog hotLog;
@@ -38,5 +38,6 @@ public class LogBackedPersistenceProvider implements PersistenceProvider<LogBack
     @Override
     public void close() throws Exception {
         hotLog.close();
+        store.close();
     }
 }
