@@ -1,5 +1,7 @@
 package zems.playground.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import zems.core.concept.PersistenceProvider;
@@ -16,9 +18,13 @@ import zems.core.utils.ZemsIoUtils;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 @Configuration
 public class ContentBusConfiguration implements TransactionalContentBusConfigurer {
+
+    private final static Logger LOG = LoggerFactory.getLogger(ContentBusConfiguration.class);
 
     @Bean
     @Override
@@ -46,8 +52,8 @@ public class ContentBusConfiguration implements TransactionalContentBusConfigure
             }
         }
 
-
         InMemoryTransactionLogStatistics stats = new InMemoryTransactionLogStatistics();
+        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> LOG.info(stats.toString()), 10, 10, TimeUnit.SECONDS);
 
         MainTransactionLog log = new MainTransactionLog(30, stats)
           .setLogPath(mainLogPath)

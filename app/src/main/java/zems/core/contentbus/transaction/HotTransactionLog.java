@@ -182,7 +182,6 @@ public class HotTransactionLog implements AutoCloseable {
 
     public HotTransactionLog append(Content content) {
         Objects.requireNonNull(content);
-        ensureActive();
 
         TransactionSegment segment = new TransactionSegment()
           .setPath(content.path())
@@ -191,6 +190,9 @@ public class HotTransactionLog implements AutoCloseable {
 
         writeLock.lock();
         try {
+            ensureActive();
+
+
             writeSegment(segment);
         } catch (BufferOverflowException headIsFull) {
             try {
