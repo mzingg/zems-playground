@@ -1,7 +1,6 @@
 // noinspection JSUnresolvedVariable,JSUnresolvedFunction
 
-const JsonUtils = typeof Java !== 'undefined' ? new (Java.type('zems.core.utils.ZemsJsonUtils'))()
-  .withOwnObjectMapper() : {asJsonString: (properties) => properties};
+const JsonUtils = typeof Java !== 'undefined' ? new (Java.type('zems.core.utils.ZemsJsonUtils'))() : {asJsonString: (properties) => properties};
 
 export const withGraalVMClient = () => {
     if (!ContentBusService) {
