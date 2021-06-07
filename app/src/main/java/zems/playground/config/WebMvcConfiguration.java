@@ -15,12 +15,12 @@ import static org.springframework.web.servlet.function.RouterFunctions.route;
 @EnableWebMvc
 public class WebMvcConfiguration implements WebMvcConfigurer {
 
-  @Bean
-  public RouterFunction<?> routeDefinition() {
-    return route()
-        .GET(accept(MediaType.TEXT_HTML), ZemsRequestHandler::handleHtml)
-        .resources(ZemsRequestHandler::resourceLookup)
-        .build();
-  }
+    @Bean
+    public RouterFunction<?> routeDefinition() {
+        return route()
+          .GET(accept(MediaType.TEXT_HTML), ZemsRequestHandler::handleHtml)
+          .resources(ZemsRequestHandler::resourceLookup)
+          .build();
+    }
 
 }

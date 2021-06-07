@@ -30,6 +30,19 @@ public class FilePersistenceProvider implements PersistenceProvider<FilePersiste
         this.binaryPath = binaryPath;
     }
 
+    private static ParsedPath parsePath(String path) {
+        final int firstArrow = path.indexOf('>');
+        if (firstArrow > 0) {
+            List<String> propertyPathParts = Arrays.asList(path.substring(firstArrow + 1).split(":"));
+            return new ParsedPath(
+              path.substring(0, firstArrow),
+              String.join("/", propertyPathParts) + PROPERTIES_EXTENSION
+            );
+        } else {
+            return new ParsedPath(path, PROPERTIES_FILENAME);
+        }
+    }
+
     @Override
     public Optional<Content> read(String path) {
         Objects.requireNonNull(path);
@@ -90,19 +103,6 @@ public class FilePersistenceProvider implements PersistenceProvider<FilePersiste
 
     private void applyProperties(Path path, Properties properties) throws IOException {
         ZemsIoUtils.write(path, jsonUtils.asJsonString(properties));
-    }
-
-    private static ParsedPath parsePath(String path) {
-        final int firstArrow = path.indexOf('>');
-        if (firstArrow > 0) {
-            List<String> propertyPathParts = Arrays.asList(path.substring(firstArrow + 1).split(":"));
-            return new ParsedPath(
-              path.substring(0, firstArrow),
-              String.join("/", propertyPathParts) + PROPERTIES_EXTENSION
-            );
-        } else {
-            return new ParsedPath(path, PROPERTIES_FILENAME);
-        }
     }
 
     private static record ParsedPath(String contentPath, String propertiesSubPath) {

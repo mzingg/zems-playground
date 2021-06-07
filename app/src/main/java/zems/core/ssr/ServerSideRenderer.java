@@ -4,6 +4,6 @@ import java.io.IOException;
 
 public interface ServerSideRenderer {
 
-  String render(String renderType, String entryResourceType, String contentPath) throws IOException;
+    String render(String renderType, String entryResourceType, String contentPath) throws IOException;
 
 }

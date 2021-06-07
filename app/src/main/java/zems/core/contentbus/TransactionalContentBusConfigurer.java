@@ -4,6 +4,6 @@ import zems.core.concept.PersistenceProvider;
 
 public interface TransactionalContentBusConfigurer {
 
-  PersistenceProvider<?> persistenceProvider();
+    PersistenceProvider<?> persistenceProvider();
 
 }

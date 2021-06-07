@@ -2,18 +2,18 @@ package zems.core.concept;
 
 public class ResourceType {
 
-  private final String resourceTypeSpec;
+    private final String resourceTypeSpec;
 
-  public ResourceType(String resourceTypeSpec) {
-    this.resourceTypeSpec = resourceTypeSpec;
-  }
+    public ResourceType(String resourceTypeSpec) {
+        this.resourceTypeSpec = resourceTypeSpec;
+    }
 
-  public String name() {
-    return resourceTypeSpec.substring(resourceTypeSpec.lastIndexOf('/') + 1);
-  }
+    public String name() {
+        return resourceTypeSpec.substring(resourceTypeSpec.lastIndexOf('/') + 1);
+    }
 
-  public String resourceUri(String suffix) {
-    return resourceTypeSpec + "/" + name() + suffix;
-  }
+    public String resourceUri(String suffix) {
+        return resourceTypeSpec + "/" + name() + suffix;
+    }
 
 }

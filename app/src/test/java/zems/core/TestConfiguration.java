@@ -7,10 +7,10 @@ import zems.core.utils.ZemsJsonUtils;
 @Configuration
 public class TestConfiguration {
 
-  private ZemsJsonUtils jsonUtils = new ZemsJsonUtils();
+    private ZemsJsonUtils jsonUtils = new ZemsJsonUtils();
 
-  @Bean
-  public ZemsJsonUtils getJsonUtils() {
-    return jsonUtils;
-  }
+    @Bean
+    public ZemsJsonUtils getJsonUtils() {
+        return jsonUtils;
+    }
 }

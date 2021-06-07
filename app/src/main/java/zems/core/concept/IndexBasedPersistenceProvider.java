@@ -4,8 +4,8 @@ import java.util.stream.Stream;
 
 public interface IndexBasedPersistenceProvider extends ReadOnlyPersistenceProvider {
 
-  void reset();
+    void reset();
 
-  void update(Stream<Content> contentStream);
+    void update(Stream<Content> contentStream);
 
 }

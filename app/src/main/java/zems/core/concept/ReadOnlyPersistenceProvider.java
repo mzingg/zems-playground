@@ -5,8 +5,8 @@ import java.util.Optional;
 
 public interface ReadOnlyPersistenceProvider {
 
-  Optional<Content> read(String path);
+    Optional<Content> read(String path);
 
-  Optional<ByteChannel> readBinary(String binaryId);
+    Optional<ByteChannel> readBinary(String binaryId);
 
 }

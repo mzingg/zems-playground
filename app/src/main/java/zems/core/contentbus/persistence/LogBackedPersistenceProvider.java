@@ -9,34 +9,34 @@ import java.util.Optional;
 
 public class LogBackedPersistenceProvider implements PersistenceProvider<LogBackedPersistenceProvider>, AutoCloseable {
 
-  private final PersistenceProvider<?> store;
-  private HotTransactionLog hotLog;
+    private final PersistenceProvider<?> store;
+    private HotTransactionLog hotLog;
 
-  public LogBackedPersistenceProvider(PersistenceProvider<?> store, HotTransactionLog hotLog) {
-    this.store = store;
-    this.hotLog = hotLog;
+    public LogBackedPersistenceProvider(PersistenceProvider<?> store, HotTransactionLog hotLog) {
+        this.store = store;
+        this.hotLog = hotLog;
 
-    hotLog.open();
-  }
+        hotLog.open();
+    }
 
-  @Override
-  public LogBackedPersistenceProvider write(Content content) {
-    hotLog.append(content);
-    return this;
-  }
+    @Override
+    public LogBackedPersistenceProvider write(Content content) {
+        hotLog.append(content);
+        return this;
+    }
 
-  @Override
-  public Optional<Content> read(String path) {
-    return store.read(path);
-  }
+    @Override
+    public Optional<Content> read(String path) {
+        return store.read(path);
+    }
 
-  @Override
-  public Optional<ByteChannel> readBinary(String binaryId) {
-    return store.readBinary(binaryId);
-  }
+    @Override
+    public Optional<ByteChannel> readBinary(String binaryId) {
+        return store.readBinary(binaryId);
+    }
 
-  @Override
-  public void close() throws Exception {
-    hotLog.close();
-  }
+    @Override
+    public void close() throws Exception {
+        hotLog.close();
+    }
 }

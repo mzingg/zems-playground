@@ -4,10 +4,10 @@ import java.nio.ByteBuffer;
 
 public interface Packable<T> {
 
-  void pack(ByteBuffer buffer);
+    void pack(ByteBuffer buffer);
 
-  T unpack(ByteBuffer buffer);
+    T unpack(ByteBuffer buffer);
 
-  int packSize();
+    int packSize();
 
 }

@@ -1,7 +1,7 @@
-import { jsxLight } from '../../../../modules/zems/core/React/index.mjs'; /*$ZEMS_SSR_RESOURCE$*/
+import {jsxLight} from '../../../../modules/zems/core/React/index.mjs'; /*$ZEMS_SSR_RESOURCE$*/
 
 export default function Image(props) {
-  const { imageSrc } = props;
+    const {imageSrc} = props;
 
-  return jsxLight`<img src="${imageSrc}"/>`;
+    return jsxLight`<img src="${imageSrc}"/>`;
 }

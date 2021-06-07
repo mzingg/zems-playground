@@ -18,6 +18,11 @@ class FilePersistenceProviderTest {
 
     private final ZemsJsonUtils jsonUtils = new ZemsJsonUtils();
 
+    @AfterAll
+    static void cleanupDirectories() {
+        cleanupTestDirectories();
+    }
+
     @Test
     void ctorWithNullContentPathThrowsExcpetion() {
         assertThrows(NullPointerException.class, () -> new FilePersistenceProvider(null, Path.of(".")));
@@ -93,11 +98,6 @@ class FilePersistenceProviderTest {
         assertTrue(Files.exists(contentDirectory.resolve("./content/playground/de/de/.properties.json")));
         assertTrue(Files.exists(contentDirectory.resolve("./content/playground/de/de/contentParsys.json")));
         assertTrue(Files.exists(contentDirectory.resolve("./content/playground/de/de/contentParsys/components8.json")));
-    }
-
-    @AfterAll
-    static void cleanupDirectories() {
-        cleanupTestDirectories();
     }
 
 }

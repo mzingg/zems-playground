@@ -2,10 +2,10 @@ package zems.core.concept;
 
 public interface DeletedValue<S> extends Value<VoidType> {
 
-  S original();
+    S original();
 
-  @Override
-  default VoidType value() {
-    return VoidType.INSTANCE;
-  }
+    @Override
+    default VoidType value() {
+        return VoidType.INSTANCE;
+    }
 }
