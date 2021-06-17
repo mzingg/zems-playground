@@ -10,7 +10,10 @@ import java.io.IOException;
 
 public class RenderPage {
 
-    private static final ContentBus contentBus = new TransactionalContentBus(new ContentBusConfiguration().persistenceProvider());
+    private static final ContentBus contentBus = new TransactionalContentBus(
+      new ContentBusConfiguration()
+        .persistenceProvider(false, 0)
+    );
     private static final ServerSideRenderer renderer = new GraalVMServersideRenderer(contentBus);
 
     public static void main(String[] args) throws IOException {

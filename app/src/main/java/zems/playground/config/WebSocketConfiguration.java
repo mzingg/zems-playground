@@ -18,7 +18,7 @@ public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer 
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/zems-contentbus").withSockJS();
+        registry.addEndpoint("/zems-contentbus").setAllowedOrigins("http://localhost:63342").withSockJS();
     }
 
 }

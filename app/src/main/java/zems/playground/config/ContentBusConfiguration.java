@@ -29,6 +29,11 @@ public class ContentBusConfiguration implements TransactionalContentBusConfigure
     @Bean
     @Override
     public PersistenceProvider<?> persistenceProvider() {
+        return persistenceProvider(true, 30);
+    }
+
+    public PersistenceProvider<?> persistenceProvider(boolean withStatsMonitor, int commitScheduleIntervalInSeconds) {
+
         Path contentBusMainDirectory = Path.of("contentbus");
         Path contentDirectory = contentBusMainDirectory.resolve("content");
         Path binariesDirectory = contentBusMainDirectory.resolve("binaries");
@@ -53,14 +58,16 @@ public class ContentBusConfiguration implements TransactionalContentBusConfigure
         }
 
         InMemoryTransactionLogStatistics stats = new InMemoryTransactionLogStatistics();
-        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> LOG.info(stats.toString()), 10, 10, TimeUnit.SECONDS);
+        if (withStatsMonitor) {
+            Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> LOG.info(stats.toString()), 10, 10, TimeUnit.SECONDS);
+        }
 
-        MainTransactionLog log = new MainTransactionLog(30, stats)
+        MainTransactionLog log = new MainTransactionLog(commitScheduleIntervalInSeconds, stats)
           .setLogPath(mainLogPath)
           .setSequenceGenerator(sequenceGenerator)
           .setStore(store);
 
-        HotTransactionLog hotLog = new HotTransactionLog(30, stats)
+        HotTransactionLog hotLog = new HotTransactionLog(commitScheduleIntervalInSeconds, stats)
           .setSequenceGenerator(sequenceGenerator)
           .setCommitLog(log)
           .setRedHeadPath(mainLogRedPath)
