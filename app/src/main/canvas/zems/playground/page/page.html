@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"> <!--TODO: find concept to handle locale -->
+<html lang="en" data-country="us" data-zems="locale()">
 <head>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1" name="viewport">
@@ -10,16 +10,15 @@
           integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x"
           rel="stylesheet">
 </head>
-<body>
+<body data-path="/content/playground/de/de" data-zems="path()">
+
 <div id="app-root"></div>
 
-<script data-zems-instruction="ssr(app-root, zems/playground/App)" type="module">
+<script data-zems="ssr(app-root, zems/playground/App)" type="module">
     import {cmp} from '../../../../modules/zems/core/ZemsReact/index.mjs'; /*$ZEMS_RESOURCE$*/
     import {Configuration} from '../../../../modules/zems/playground/Config/index.mjs'; /*$ZEMS_SSR_RESOURCE$*/
 
-    const {currentContentPath, contentBusUrl} = Configuration;
-
-    window.SocketServerUrl = contentBusUrl;
+    window.SocketServerUrl = Configuration.contentBusUrl;
     if (!window.sessionStorage.getItem('ZemsRenderMode')) {
         window.sessionStorage.setItem('ZemsRenderMode', 'author');
     }
@@ -27,7 +26,7 @@
     cmp({
         resourceType: 'zems/playground/App',
         renderId: 'app-root',
-        props: {pagePath: currentContentPath}
+        props: {pagePath: document.body.getAttribute('data-path')}
     })
 </script>
 <script crossorigin="anonymous"

@@ -35,7 +35,8 @@ public class RenderPage {
           "zems/playground/page",
           "zems/playground/App",
           "/content/playground/de/de",
-          Locale.ENGLISH,
+          Locale.forLanguageTag("de-CH"),
+          "ch",
           supportedTypes,
           System.out::println,
           (script, error) -> System.err.printf("In script %s: %s%n", script, error)
