@@ -2,6 +2,7 @@ package zems.playground.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import zems.config.AbstractContentBusConfiguration;
 import zems.core.concept.PersistenceProvider;
 
@@ -32,4 +33,15 @@ public class PlaygroundContentBusConfiguration extends AbstractContentBusConfigu
         return super.persistenceProvider();
     }
 
+    @Bean("contentBusUrl")
+    @Profile("localdev")
+    public String contentBusUrlLocalDev() {
+        return "http://localhost:8080/zems-contentbus";
+    }
+
+    @Bean("contentBusUrl")
+    @Profile("prod")
+    public String contentBusUrlProd() {
+        return "https://playground.zems.io/zems-contentbus";
+    }
 }

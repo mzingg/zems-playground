@@ -10,15 +10,14 @@
           integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x"
           rel="stylesheet">
 </head>
-<body data-path="/content/playground/de/de" data-zems="path()">
+<body data-path="/content/playground/de/de" data-contentbus="http://localhost:8080/zems-contentbus" data-zems="path()">
 
 <div id="app-root"></div>
 
 <script data-zems="ssr(app-root, zems/playground/App)" type="module">
     import {cmp} from '../../../../modules/zems/core/ZemsReact/index.mjs'; /*$ZEMS_RESOURCE$*/
-    import {Configuration} from '../../../../modules/zems/playground/Config/index.mjs'; /*$ZEMS_SSR_RESOURCE$*/
 
-    window.SocketServerUrl = Configuration.contentBusUrl;
+    window.SocketServerUrl = document.body.getAttribute('data-contentbus');
     if (!window.sessionStorage.getItem('ZemsRenderMode')) {
         window.sessionStorage.setItem('ZemsRenderMode', 'author');
     }

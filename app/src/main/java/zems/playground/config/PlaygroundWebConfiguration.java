@@ -1,5 +1,7 @@
 package zems.playground.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
@@ -11,8 +13,9 @@ import zems.core.contentbus.TransactionalContentBus;
 @EnableWebMvc
 public class PlaygroundWebConfiguration extends AbstractZemsWebConfiguration {
 
-    public PlaygroundWebConfiguration(TransactionalContentBus contentBus) {
-        super(contentBus);
+    @Autowired
+    public PlaygroundWebConfiguration(TransactionalContentBus contentBus, @Qualifier("contentBusUrl") String contentBusUrl) {
+        super(contentBus, contentBusUrl);
     }
 
     @Override

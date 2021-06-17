@@ -5,6 +5,7 @@ import zems.core.concept.ServerSideRenderRequest;
 import zems.core.concept.ServerSideRenderer;
 import zems.core.contentbus.TransactionalContentBus;
 import zems.core.ssr.Canvas;
+import zems.core.ssr.CanvasReplacements;
 import zems.core.ssr.GraalVMServersideRenderer;
 import zems.playground.config.PlaygroundContentBusConfiguration;
 
@@ -31,11 +32,17 @@ public class RenderPage {
           "zems/playground/TextImage"
         );
 
-        ServerSideRenderRequest request = new ServerSideRenderRequest(
-          new Canvas("zems/playground/page"),
+        CanvasReplacements replacements = new CanvasReplacements(
+          null,
           "/content/playground/de/de",
           Locale.forLanguageTag("de-CH"),
           "ch",
+          ""
+        );
+
+        ServerSideRenderRequest request = new ServerSideRenderRequest(
+          new Canvas("zems/playground/page"),
+          replacements,
           supportedComponents,
           System.out::println,
           (script, error) -> System.err.printf("In script %s: %s%n", script, error)
