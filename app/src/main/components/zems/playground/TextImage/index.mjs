@@ -15,13 +15,15 @@ export default function TextImage(props) {
     })
 
     if (ImageComponent && TextComponent) {
+        //language=HTML
         return jsxLight`
-      <div>
-        ${TextComponent}
-        ${ImageComponent}
-      </div>`;
+            <div>
+                ${TextComponent}
+                ${ImageComponent}
+            </div>`;
     } else {
+        //language=HTML
         return jsxLight`
-      <div>Loading ...</div>`;
+            <div>Loading ...</div>`;
     }
 }

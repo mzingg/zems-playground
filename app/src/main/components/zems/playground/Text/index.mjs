@@ -4,6 +4,7 @@ import {useProperty} from "../../../../modules/zems/core/ZemsReact/index.mjs";
 export default function Text(props) {
     const [text, setText] = useProperty('text', props)
 
+    //language=HTML
     return jsxLight`
-    <div className="text">${text}</div>`;
+        <div className="text">${text}</div>`;
 }
