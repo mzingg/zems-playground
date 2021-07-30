@@ -31,16 +31,16 @@ export default function App(props) {
         dependencyArray: []
     })
 
-    useEffect(() => {
-        document.addEventListener('keydown', (event) => {
-            if (event.key === 'F6') {
-                sendToTopic({
-                    topic: '/contentbus/flush',
-                    payload: {}
-                })
-            }
-        });
-    }, []);
+    // useEffect(() => {
+    //     document.addEventListener('keydown', (event) => {
+    //         if (event.key === 'F6') {
+    //             sendToTopic({
+    //                 topic: '/contentbus/flush',
+    //                 payload: {}
+    //             })
+    //         }
+    //     });
+    // }, []);
 
     //language=HTML
     return jsxLight`

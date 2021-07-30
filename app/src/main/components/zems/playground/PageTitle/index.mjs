@@ -4,7 +4,7 @@ import {useProperty} from '../../../../modules/zems/core/ZemsReact/index.mjs'; /
 
 export default function PageTitle(props) {
     const {pageTitlePrefix} = Configuration;
-    const [pageTitle, setPageTitle] = useProperty('pageTitle', props)
+    const pageTitle = useProperty('pageTitle', props)
 
     //language=HTML
     return jsxLight`<h1>${pageTitlePrefix} | ${pageTitle}</h1>`;

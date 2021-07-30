@@ -18,7 +18,6 @@
 <script data-zems="ssr(app-root, zems/playground/App)" type="module">
     import {cmp} from '../../../../modules/zems/core/ZemsReact/index.mjs'; /*$ZEMS_RESOURCE$*/
 
-    window.SocketServerUrl = document.body.getAttribute('data-contentbus');
     if (!window.sessionStorage.getItem('ZemsRenderMode')) {
         window.sessionStorage.setItem('ZemsRenderMode', 'author');
     }
