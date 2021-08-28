@@ -2,7 +2,6 @@
 
 import {jsxLight, React} from '../../../../modules/zems/core/React/index.mjs'; /*$ZEMS_SSR_RESOURCE$*/
 import {useComponent} from '../../../../modules/zems/core/ZemsReact/index.mjs'; /*$ZEMS_RESOURCE$*/
-import {sendToTopic} from '../../../../modules/zems/core/ContentBus/index.mjs'; /*$ZEMS_RESOURCE$*/
 
 const {useEffect, useState} = React;
 
@@ -30,17 +29,6 @@ export default function App(props) {
         },
         dependencyArray: []
     })
-
-    // useEffect(() => {
-    //     document.addEventListener('keydown', (event) => {
-    //         if (event.key === 'F6') {
-    //             sendToTopic({
-    //                 topic: '/contentbus/flush',
-    //                 payload: {}
-    //             })
-    //         }
-    //     });
-    // }, []);
 
     //language=HTML
     return jsxLight`
