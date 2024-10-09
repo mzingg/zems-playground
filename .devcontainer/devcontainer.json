@@ -8,7 +8,6 @@
             "type": "volume"
         }
     ],
-    "onCreateCommand": "sudo chmod a+w /home/vscode/.m2",
     "features": {
         "ghcr.io/audacioustux/devcontainers/graalvm:1": {
             "java": "21",
