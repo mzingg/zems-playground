@@ -1,6 +1,13 @@
 {
     "name": "zems-playground",
     "dockerFile": "Dockerfile",
+    "mounts": [
+        {
+            "source": "volume-maven-repo",
+            "target": "/home/vscode/.m2",
+            "type": "volume"
+        }
+    ],
     "features": {
         "ghcr.io/audacioustux/devcontainers/graalvm:1": {
             "java": "21",
