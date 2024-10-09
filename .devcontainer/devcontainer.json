@@ -1,0 +1,14 @@
+{
+    "name": "zems-playground",
+    "dockerFile": "Dockerfile",
+    "features": {
+        "ghcr.io/audacioustux/devcontainers/graalvm:1": {
+            "java": "21",
+            "components": ""
+        },
+        "ghcr.io/devcontainers/features/node:1": {
+            "version": "v22",
+            "installYarnUsingApt": true
+        }
+    }
+}
